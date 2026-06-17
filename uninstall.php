@@ -25,10 +25,15 @@ function uploads_proxy_delete_options(): void {
 }
 
 if ( is_multisite() ) {
-	$site_ids = get_sites( [ 'fields' => 'ids', 'number' => 0 ] );
+	$uploads_proxy_site_ids = get_sites(
+		[
+			'fields' => 'ids',
+			'number' => 0,
+		]
+	);
 
-	foreach ( $site_ids as $site_id ) {
-		switch_to_blog( (int) $site_id );
+	foreach ( $uploads_proxy_site_ids as $uploads_proxy_site_id ) {
+		switch_to_blog( (int) $uploads_proxy_site_id );
 		uploads_proxy_delete_options();
 		restore_current_blog();
 	}

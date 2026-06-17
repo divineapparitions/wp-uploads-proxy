@@ -10,11 +10,11 @@
 
 declare(strict_types=1);
 
-$autoload = dirname(__DIR__) . '/vendor/autoload.php';
+$autoload = dirname( __DIR__ ) . '/vendor/autoload.php';
 
-if (! is_readable($autoload)) {
-    fwrite(STDERR, "Composer dependencies are missing. Run `composer install` first.\n");
-    exit(1);
+if ( ! is_readable( $autoload ) ) {
+	fwrite( STDERR, "Composer dependencies are missing. Run `composer install` first.\n" );
+	exit( 1 );
 }
 
 require_once $autoload;

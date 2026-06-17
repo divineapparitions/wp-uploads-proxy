@@ -15,12 +15,30 @@
 	<arg name="extensions" value="php"/>
 	<arg name="parallel" value="8"/>
 
-	<!-- WordPress coding standards. -->
-	<rule ref="WordPress-Core"/>
-	<rule ref="WordPress-Docs"/>
-	<rule ref="WordPress-Extra"/>
+	<!--
+		This plugin is written as modern, namespaced PSR-4 OOP (strict types,
+		enums, typed properties, deep modules — see docs/adr/). We keep the
+		WordPress security and best-practice sniffs (WordPress-Extra) but drop
+		the sniffs that assume the classic procedural style and actively fight
+		PSR-4 OOP:
+		  - DisallowShortArraySyntax / DisallowShortTernary — modern array and
+		    ternary syntax is used throughout.
+		  - ValidVariableName / ValidFunctionName — camelCase locals and OOP
+		    method names (e.g. isEnabled(), originSource()).
+		  - Files.FileName — PSR-4 class filenames (Mode.php), not class-mode.php.
+		WordPress-Docs (which mandates a docblock on every file and function) is
+		intentionally not referenced: the code is documented where it adds value
+		and typed signatures carry the rest.
+	-->
+	<rule ref="WordPress-Extra">
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+		<exclude name="Universal.Operators.DisallowShortTernary"/>
+		<exclude name="WordPress.NamingConventions.ValidVariableName"/>
+		<exclude name="WordPress.NamingConventions.ValidFunctionName"/>
+		<exclude name="WordPress.Files.FileName"/>
+	</rule>
 
-	<!-- Enforce a consistent text domain and prefixes. -->
+	<!-- Enforce a consistent text domain. -->
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
@@ -29,6 +47,11 @@
 		</properties>
 	</rule>
 
+	<!--
+		Prefix file-scope globals. Test code is not production WordPress — it
+		legitimately uses file-scope variables and writes to STDERR — so the
+		global-prefix and WP_Filesystem sniffs do not apply there.
+	-->
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">
@@ -36,10 +59,21 @@
 				<element value="DivineApparitions\UploadsProxy"/>
 			</property>
 		</properties>
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.WP.AlternativeFunctions">
+		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
 
 	<!-- Target the minimum supported versions. -->
 	<config name="minimum_wp_version" value="6.5"/>
 	<config name="testVersion" value="8.2-"/>
-	<rule ref="PHPCompatibilityWP"/>
+	<rule ref="PHPCompatibilityWP">
+		<!--
+			False positive on PHP 8.1+ enum methods: the sniff does not recognise
+			an enum method's object context and flags `match ( $this )` as a plain
+			function use of $this. The code is valid (Mode.php, Source.php).
+		-->
+		<exclude name="PHPCompatibility.Variables.ForbiddenThisUseContexts.OutsideObjectContext"/>
+	</rule>
 </ruleset>

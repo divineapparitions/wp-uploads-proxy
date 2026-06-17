@@ -37,9 +37,9 @@ if ( defined( __NAMESPACE__ . '\VERSION' ) ) {
 	return;
 }
 
-const VERSION              = '0.2.0';
-const MINIMUM_PHP_VERSION  = '8.2';
-const MINIMUM_WP_VERSION   = '6.5';
+const VERSION             = '0.2.0';
+const MINIMUM_PHP_VERSION = '8.2';
+const MINIMUM_WP_VERSION  = '6.5';
 
 /**
  * Render an admin notice and abort bootstrapping.
