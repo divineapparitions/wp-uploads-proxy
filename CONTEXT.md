@@ -89,6 +89,24 @@ repeated Misses for a genuinely-absent file stop re-hitting the Origin.
   proxied responses. Uninstall clears options/transients but never deletes
   downloaded media.
 
+## Tooling decisions
+
+- **Testing stack: PHPUnit `^9.6`, not 10.** Unit tests run with Brain Monkey
+  (no WordPress boot); integration tests boot real WordPress via
+  `@wordpress/env` (`npm run test:integration` → `wp-env run tests-cli
+  vendor/bin/phpunit -c phpunit-integration.xml.dist`), with the Origin mocked
+  through `pre_http_request`. PHPUnit is pinned to `^9.6` (with
+  `yoast/phpunit-polyfills`) because the WordPress core test suite that wp-env
+  runs still uses the PHPUnit 9 API (`parseTestMethodAnnotations()`) that was
+  removed in PHPUnit 10 — integration tests cannot run on 10. Do not "upgrade"
+  PHPUnit past 9 without first confirming the WP test suite supports it.
+- **Coding standards: a PSR-4 OOP profile, not classic procedural WPCS.** This
+  plugin is namespaced PSR-4 OOP (strict types, enums, typed properties). The
+  phpcs ruleset keeps WordPress-Extra's security/best-practice sniffs but drops
+  the sniffs that fight that style (short-array/short-ternary prohibition,
+  snake_case variable/method names, hyphenated `class-*.php` filenames) and does
+  not reference WordPress-Docs.
+
 ## Flagged ambiguities
 
 - _(none yet)_
