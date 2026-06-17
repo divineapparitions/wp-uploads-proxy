@@ -1,0 +1,10 @@
+# szepeviktor/phpstan-wordpress is auto-registered via phpstan/extension-installer,
+# which bundles the WordPress core stubs PHPStan needs.
+parameters:
+	level: 6
+	paths:
+		- src
+		- uploads-proxy.php
+		- uninstall.php
+	# WordPress hook callbacks pass mixed values; allow the deliberate widening.
+	treatPhpDocTypesAsCertain: false

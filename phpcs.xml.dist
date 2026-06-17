@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<ruleset name="Uploads Proxy">
+	<description>Coding standards for the Uploads Proxy plugin.</description>
+
+	<!-- What to scan. -->
+	<file>.</file>
+
+	<!-- What to skip. -->
+	<exclude-pattern>/vendor/*</exclude-pattern>
+	<exclude-pattern>/node_modules/*</exclude-pattern>
+
+	<!-- Show progress and sniff codes; use colour. -->
+	<arg value="ps"/>
+	<arg name="colors"/>
+	<arg name="extensions" value="php"/>
+	<arg name="parallel" value="8"/>
+
+	<!-- WordPress coding standards. -->
+	<rule ref="WordPress-Core"/>
+	<rule ref="WordPress-Docs"/>
+	<rule ref="WordPress-Extra"/>
+
+	<!-- Enforce a consistent text domain and prefixes. -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="uploads-proxy"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="uploads_proxy"/>
+				<element value="DivineApparitions\UploadsProxy"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Target the minimum supported versions. -->
+	<config name="minimum_wp_version" value="6.5"/>
+	<config name="testVersion" value="8.2-"/>
+	<rule ref="PHPCompatibilityWP"/>
+</ruleset>

@@ -1,0 +1,27 @@
+# Composer
+/vendor/
+
+# Node (if a build step is added later)
+/node_modules/
+
+# Tooling caches
+/.phpunit.cache/
+/.phpcs.cache
+/.phpstan.cache/
+.phpunit.result.cache
+
+# Build / distribution artifacts
+/build/
+/dist/
+*.zip
+
+# Local overrides of the shared config templates
+phpcs.xml
+phpstan.neon
+phpunit.xml
+
+# Editor / OS noise
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db

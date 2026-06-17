@@ -1,0 +1,73 @@
+{
+	"name": "divine-apparitions/uploads-proxy",
+	"description": "Proxy missing media to a production origin so staging and local environments don't need a full copy of the uploads directory.",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"keywords": [
+		"wordpress",
+		"wordpress-plugin",
+		"media",
+		"uploads",
+		"proxy",
+		"staging"
+	],
+	"homepage": "https://github.com/philltran/wp-uploads-proxy",
+	"authors": [
+		{
+			"name": "Divine Apparitions",
+			"homepage": "https://github.com/philltran"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/philltran/wp-uploads-proxy/issues",
+		"source": "https://github.com/philltran/wp-uploads-proxy"
+	},
+	"require": {
+		"php": ">=8.2"
+	},
+	"require-dev": {
+		"brain/monkey": "^2.6",
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"phpcompatibility/phpcompatibility-wp": "^2.1",
+		"phpstan/extension-installer": "^1.4",
+		"phpstan/phpstan": "^2.0",
+		"phpunit/phpunit": "^10.5",
+		"szepeviktor/phpstan-wordpress": "^2.0",
+		"wp-coding-standards/wpcs": "^3.1"
+	},
+	"autoload": {
+		"psr-4": {
+			"DivineApparitions\\UploadsProxy\\": "src/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"DivineApparitions\\UploadsProxy\\Tests\\": "tests/"
+		}
+	},
+	"config": {
+		"sort-packages": true,
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true,
+			"phpstan/extension-installer": true
+		}
+	},
+	"scripts": {
+		"lint": "phpcs",
+		"lint:fix": "phpcbf",
+		"analyze": "phpstan analyse",
+		"test": "phpunit",
+		"check": [
+			"@lint",
+			"@analyze",
+			"@test"
+		]
+	},
+	"scripts-descriptions": {
+		"lint": "Check coding standards with PHP_CodeSniffer.",
+		"lint:fix": "Auto-fix coding-standard violations where possible.",
+		"analyze": "Run PHPStan static analysis.",
+		"test": "Run the PHPUnit test suite.",
+		"check": "Run lint, static analysis, and tests."
+	}
+}
