@@ -7,8 +7,13 @@ namespace DivineApparitions\UploadsProxy;
 use DivineApparitions\UploadsProxy\Admin\SettingsPage;
 use DivineApparitions\UploadsProxy\Config\ConstantsFirstResolver;
 use DivineApparitions\UploadsProxy\Config\SystemEnvironment;
-use DivineApparitions\UploadsProxy\Proxy\MediaProxy;
+use DivineApparitions\UploadsProxy\Proxy\FileWriter;
+use DivineApparitions\UploadsProxy\Proxy\HttpResponder;
+use DivineApparitions\UploadsProxy\Proxy\OriginClient;
+use DivineApparitions\UploadsProxy\Proxy\RequestHandler;
+use DivineApparitions\UploadsProxy\Proxy\UploadsScope;
 use DivineApparitions\UploadsProxy\Settings\Settings;
+use DivineApparitions\UploadsProxy\State\Counters;
 
 /**
  * Wires the plugin's components into WordPress.
@@ -38,7 +43,15 @@ final class Plugin {
 
 		$this->components = [
 			new SettingsPage( $settings ),
-			new MediaProxy( $resolver ),
+			new RequestHandler(
+				$resolver,
+				new OriginClient(),
+				new FileWriter(),
+				new Counters(),
+				new HttpResponder(),
+				static fn (): UploadsScope => UploadsScope::fromWordPress(),
+				static fn (): string => wp_get_environment_type(),
+			),
 		];
 	}
 

@@ -8,6 +8,7 @@
 	<!-- What to skip. -->
 	<exclude-pattern>/vendor/*</exclude-pattern>
 	<exclude-pattern>/node_modules/*</exclude-pattern>
+	<exclude-pattern>/.wp-env-home/*</exclude-pattern>
 
 	<!-- Show progress and sniff codes; use colour. -->
 	<arg value="ps"/>

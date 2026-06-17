@@ -4,8 +4,13 @@
 # Node (if a build step is added later)
 /node_modules/
 
+# @wordpress/env working directory (when WP_ENV_HOME points inside the project)
+/.wp-env-home/
+/.wp-env-override.json
+
 # Tooling caches
 /.phpunit.cache/
+/.phpunit.cache.integration/
 /.phpcs.cache
 /.phpstan.cache/
 .phpunit.result.cache

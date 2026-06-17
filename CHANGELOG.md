@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-17
+
+### Added
+
+- Request-interception walking skeleton (ADR-0001): on `template_redirect`, a
+  Miss for a missing Uploads path is resolved against the configured Origin. In
+  Download mode (default) the file is fetched through WordPress's HTTP layer
+  (host swapped, relative uploads path preserved, optional Basic Auth attached),
+  contained to the uploads basedir with executable extensions refused, streamed
+  to a temp file and atomically `rename()`d into place, then served in the same
+  request with `Content-Type`/`Content-Length` and an `X-Uploads-Proxy: download`
+  header. A downloaded counter tracks the total.
+- Deep modules under `src/Proxy/` (`RequestHandler`, `OriginClient`,
+  `OriginRequest`/`OriginResponse`, `UploadsScope`, `FileWriter`, `HttpResponder`)
+  and `src/State/Counters`. A Derivative and a non-image (PDF) resolve through the
+  same handler.
+- `@wordpress/env` `tests-cli` integration harness booting real WordPress with the
+  Origin mocked via `pre_http_request`, asserting the download/atomic-save/serve
+  behaviour, the header, and the file landing on disk.
+
+### Changed
+
+- Pinned PHPUnit to `^9.6` (with `yoast/phpunit-polyfills`) so the WordPress core
+  test suite can run under wp-env — the WP test suite is not PHPUnit 10 compatible.
+
+### Removed
+
+- The superseded URL-rewriting `MediaProxy`, replaced by the request-interception
+  handler (ADR-0001).
+
 ## [0.2.0] - 2026-06-16
 
 ### Added
@@ -41,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Development tooling: PHP_CodeSniffer (WPCS), PHPStan, PHPUnit (Brain Monkey),
   and a GitHub Actions CI workflow across PHP 8.2–8.4.
 
-[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/philltran/wp-uploads-proxy/releases/tag/v0.1.0
