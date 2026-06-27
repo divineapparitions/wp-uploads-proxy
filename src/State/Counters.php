@@ -20,6 +20,11 @@ final class Counters {
 	public const OPTION_DOWNLOADED = 'uploads_proxy_downloaded_count';
 
 	/**
+	 * Option name for the negative-cache entries created total.
+	 */
+	public const OPTION_NEGATIVE_COUNT = 'uploads_proxy_negative_count';
+
+	/**
 	 * The number of files downloaded from the Origin and saved locally.
 	 */
 	public function downloaded(): int {
@@ -32,6 +37,23 @@ final class Counters {
 	public function recordDownload(): int {
 		$next = $this->downloaded() + 1;
 		update_option( self::OPTION_DOWNLOADED, $next, false );
+
+		return $next;
+	}
+
+	/**
+	 * The number of Negative-cache entries ever created (a running total, not the current live count).
+	 */
+	public function negativeCount(): int {
+		return (int) get_option( self::OPTION_NEGATIVE_COUNT, 0 );
+	}
+
+	/**
+	 * Record one new Negative-cache entry, returning the new total.
+	 */
+	public function recordNegative(): int {
+		$next = $this->negativeCount() + 1;
+		update_option( self::OPTION_NEGATIVE_COUNT, $next, false );
 
 		return $next;
 	}

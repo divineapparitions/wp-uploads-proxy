@@ -38,4 +38,25 @@ final class OriginResponse {
 	public function isOk(): bool {
 		return 200 === $this->statusCode;
 	}
+
+	/**
+	 * Whether the Origin returned 404 or 410 — the file is genuinely absent.
+	 *
+	 * These statuses warrant a Negative-cache entry so repeat Misses for the same
+	 * path short-circuit without re-hitting the Origin.
+	 */
+	public function isGone(): bool {
+		return 404 === $this->statusCode || 410 === $this->statusCode;
+	}
+
+	/**
+	 * Whether the Origin is temporarily unavailable (5xx or a transport error).
+	 *
+	 * A status of 0 is the normalised form of a `WP_Error` (transport timeout or
+	 * similar). These are transient blips: do NOT Negative-cache them so the next
+	 * request retries the Origin.
+	 */
+	public function isServerError(): bool {
+		return 0 === $this->statusCode || $this->statusCode >= 500;
+	}
 }

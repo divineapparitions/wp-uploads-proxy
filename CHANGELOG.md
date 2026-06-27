@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-27
+
+### Added
+
+- Miss-fallback + Negative-cache deep module (issue #5): Origin `404`/`410` →
+  serve a local `404` marked with `X-Uploads-Proxy: negative`, record a
+  short-lived Negative-cache transient (~10 min, keyed by the relative uploads
+  path via `NegativeCache`) so repeat Misses short-circuit without re-hitting
+  the Origin. Origin `5xx`/timeout → serve `404` with no cache entry so the next
+  request retries.
+- `NegativeCache` (`src/State/NegativeCache.php`): manages `get_transient` /
+  `set_transient` with a `uploads_proxy_neg_` + md5 key scheme and a `TTL` of
+  600 seconds.
+- `Counters::negativeCount()` / `Counters::recordNegative()`: running total of
+  Negative-cache entries ever created, stored in the non-autoloaded option
+  `uploads_proxy_negative_count`.
+- `OriginResponse::isGone()` (404 or 410) and `isServerError()` (5xx or status 0)
+  helpers for branching in `RequestHandler`.
+- `Responder::serve404( string $xUploadsProxy ): void` interface method;
+  `HttpResponder` implementation sets `http_response_code(404)` and the optional
+  `X-Uploads-Proxy` header, then exits.
+- Unit tests (Brain Monkey) covering all miss-fallback paths: 404 caches + header
+  + counter, 5xx does not cache, short-circuit on repeat miss.
+- Integration test suite `MissFallbackTest` (wp-env `tests-cli`) asserting the
+  full 404/410/5xx/repeat-miss behaviours against real WordPress transients and
+  options, with the Origin mocked via `pre_http_request`.
+
 ## [0.4.0] - 2026-06-27
 
 ### Added
@@ -92,7 +119,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Development tooling: PHP_CodeSniffer (WPCS), PHPStan, PHPUnit (Brain Monkey),
   and a GitHub Actions CI workflow across PHP 8.2–8.4.
 
-[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.1.0...v0.2.0

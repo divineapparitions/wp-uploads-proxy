@@ -20,4 +20,16 @@ interface Responder {
 	 * implementations terminate the request after sending.
 	 */
 	public function serveDownload( string $bytes, string $contentType ): void;
+
+	/**
+	 * Emit a 404 Not Found response.
+	 *
+	 * When `$xUploadsProxy` is non-empty it is emitted as the `X-Uploads-Proxy`
+	 * header value (use `'negative'` for a Negative-cache miss so devtools and
+	 * Playwright tests can distinguish it from an unhandled 404). Pass an empty
+	 * string for a 5xx/timeout fallback where no header is appropriate.
+	 *
+	 * Production implementations terminate the request after sending.
+	 */
+	public function serve404( string $xUploadsProxy ): void;
 }

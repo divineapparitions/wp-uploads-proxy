@@ -18,6 +18,7 @@ use DivineApparitions\UploadsProxy\Proxy\RequestHandler;
 use DivineApparitions\UploadsProxy\Proxy\Responder;
 use DivineApparitions\UploadsProxy\Proxy\UploadsScope;
 use DivineApparitions\UploadsProxy\State\Counters;
+use DivineApparitions\UploadsProxy\State\NegativeCache;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -98,16 +99,47 @@ final class RequestHandlerTest extends TestCase {
 		};
 	}
 
+	/**
+	 * A counting origin client that records fetched requests and returns a fixed response.
+	 * Uses a shared stdClass counter so both references stay in sync.
+	 *
+	 * @return array{0: OriginFetcher, 1: \stdClass}
+	 */
+	private function countingOriginClient( OriginResponse $response ): array {
+		$counter       = new \stdClass();
+		$counter->hits = 0;
+		$fetcher       = new class( $response, $counter ) implements OriginFetcher {
+			public function __construct(
+				private OriginResponse $response,
+				private \stdClass $counter,
+			) {}
+
+			public function fetch( OriginRequest $request ): OriginResponse {
+				++$this->counter->hits;
+				return $this->response;
+			}
+		};
+
+		return [ $fetcher, $counter ];
+	}
+
 	private function capturingResponder(): Responder {
 		return new class() implements Responder {
 			/** @var array<string, string> */
 			public array $served = [];
+
+			/** @var array{xUploadsProxy: string}|array{} */
+			public array $served404 = [];
 
 			public function serveDownload( string $bytes, string $contentType ): void {
 				$this->served = [
 					'bytes'       => $bytes,
 					'contentType' => $contentType,
 				];
+			}
+
+			public function serve404( string $xUploadsProxy ): void {
+				$this->served404 = [ 'xUploadsProxy' => $xUploadsProxy ];
 			}
 		};
 	}
@@ -121,6 +153,7 @@ final class RequestHandlerTest extends TestCase {
 			$this->originClient( new OriginResponse( 200, 'IMAGE-BYTES', 'image/jpeg' ) ),
 			new FileWriter(),
 			new Counters(),
+			new NegativeCache(),
 			$responder,
 			static fn (): UploadsScope => $scope,
 			static fn (): string => 'production' === 'staging' ? 'production' : 'local',
@@ -132,6 +165,7 @@ final class RequestHandlerTest extends TestCase {
 				'type' => 'image/jpeg',
 			]
 		);
+		Functions\when( 'get_transient' )->justReturn( false );
 		Functions\when( 'get_option' )->justReturn( 0 );
 		Functions\expect( 'update_option' )->once();
 
@@ -151,6 +185,7 @@ final class RequestHandlerTest extends TestCase {
 			$this->originClient( new OriginResponse( 200, 'X', 'image/jpeg' ) ),
 			new FileWriter(),
 			new Counters(),
+			new NegativeCache(),
 			$this->capturingResponder(),
 			static fn (): UploadsScope => $scope,
 			static fn (): string => 'production',
@@ -177,6 +212,7 @@ final class RequestHandlerTest extends TestCase {
 			$this->originClient( new OriginResponse( 200, 'X', 'image/jpeg' ) ),
 			new FileWriter(),
 			new Counters(),
+			new NegativeCache(),
 			$this->capturingResponder(),
 			static fn (): UploadsScope => $scope,
 			static fn (): string => 'local',
@@ -192,6 +228,7 @@ final class RequestHandlerTest extends TestCase {
 			$this->originClient( new OriginResponse( 200, 'X', 'image/jpeg' ) ),
 			new FileWriter(),
 			new Counters(),
+			new NegativeCache(),
 			$this->capturingResponder(),
 			static fn (): UploadsScope => $scope,
 			static fn (): string => 'local',
@@ -210,6 +247,7 @@ final class RequestHandlerTest extends TestCase {
 			$this->originClient( new OriginResponse( 200, 'FROM-ORIGIN', 'image/jpeg' ) ),
 			new FileWriter(),
 			new Counters(),
+			new NegativeCache(),
 			$this->capturingResponder(),
 			static fn (): UploadsScope => $scope,
 			static fn (): string => 'local',
@@ -235,6 +273,7 @@ final class RequestHandlerTest extends TestCase {
 			$this->originClient( new OriginResponse( 200, 'MALWARE-BYTES', 'application/octet-stream' ) ),
 			new FileWriter(),
 			new Counters(),
+			new NegativeCache(),
 			$this->capturingResponder(),
 			static fn (): UploadsScope => $scope,
 			static fn (): string => 'local',
@@ -251,6 +290,7 @@ final class RequestHandlerTest extends TestCase {
 			$this->originClient( new OriginResponse( 200, '<?php evil', 'application/x-php' ) ),
 			new FileWriter(),
 			new Counters(),
+			new NegativeCache(),
 			$this->capturingResponder(),
 			static fn (): UploadsScope => $scope,
 			static fn (): string => 'local',
@@ -258,5 +298,252 @@ final class RequestHandlerTest extends TestCase {
 
 		self::assertFalse( $handler->handle( '/wp-content/uploads/2026/06/shell.php' ) );
 		self::assertFileDoesNotExist( $this->baseDir . '/2026/06/shell.php' );
+	}
+
+	// -------------------------------------------------------------------------
+	// Miss-fallback: Origin 404 / 410 → Negative cache
+	// -------------------------------------------------------------------------
+
+	public function test_origin_404_serves_local_404_with_negative_header(): void {
+		$scope     = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		$responder = $this->capturingResponder();
+
+		$handler = new RequestHandler(
+			$this->resolver( $this->config() ),
+			$this->originClient( new OriginResponse( 404, '', '' ) ),
+			new FileWriter(),
+			new Counters(),
+			new NegativeCache(),
+			$responder,
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		Functions\when( 'wp_check_filetype' )->justReturn(
+			[
+				'ext'  => 'jpg',
+				'type' => 'image/jpeg',
+			]
+		);
+		Functions\when( 'get_transient' )->justReturn( false );
+		Functions\when( 'set_transient' )->justReturn( true );
+		Functions\when( 'get_option' )->justReturn( 0 );
+		Functions\when( 'update_option' )->justReturn( true );
+
+		$handled = $handler->handle( '/wp-content/uploads/2026/06/photo.jpg' );
+
+		self::assertTrue( $handled );
+		self::assertSame( 'negative', $responder->served404['xUploadsProxy'] ?? null );
+		self::assertFileDoesNotExist( $this->baseDir . '/2026/06/photo.jpg' );
+	}
+
+	public function test_origin_410_serves_local_404_with_negative_header(): void {
+		$scope     = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		$responder = $this->capturingResponder();
+
+		$handler = new RequestHandler(
+			$this->resolver( $this->config() ),
+			$this->originClient( new OriginResponse( 410, '', '' ) ),
+			new FileWriter(),
+			new Counters(),
+			new NegativeCache(),
+			$responder,
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		Functions\when( 'wp_check_filetype' )->justReturn(
+			[
+				'ext'  => 'jpg',
+				'type' => 'image/jpeg',
+			]
+		);
+		Functions\when( 'get_transient' )->justReturn( false );
+		Functions\when( 'set_transient' )->justReturn( true );
+		Functions\when( 'get_option' )->justReturn( 0 );
+		Functions\when( 'update_option' )->justReturn( true );
+
+		$handled = $handler->handle( '/wp-content/uploads/2026/06/photo.jpg' );
+
+		self::assertTrue( $handled );
+		self::assertSame( 'negative', $responder->served404['xUploadsProxy'] ?? null );
+	}
+
+	public function test_origin_404_records_negative_cache_transient(): void {
+		$scope       = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		$capturedKey = null;
+
+		$handler = new RequestHandler(
+			$this->resolver( $this->config() ),
+			$this->originClient( new OriginResponse( 404, '', '' ) ),
+			new FileWriter(),
+			new Counters(),
+			new NegativeCache(),
+			$this->capturingResponder(),
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		Functions\when( 'wp_check_filetype' )->justReturn(
+			[
+				'ext'  => 'jpg',
+				'type' => 'image/jpeg',
+			]
+		);
+		Functions\when( 'get_transient' )->justReturn( false );
+		Functions\expect( 'set_transient' )
+			->once()
+			->andReturnUsing(
+				static function ( string $key ) use ( &$capturedKey ): bool {
+					$capturedKey = $key;
+					return true;
+				}
+			);
+		Functions\when( 'get_option' )->justReturn( 0 );
+		Functions\when( 'update_option' )->justReturn( true );
+
+		$handler->handle( '/wp-content/uploads/2026/06/photo.jpg' );
+
+		self::assertStringStartsWith( 'uploads_proxy_neg_', (string) $capturedKey );
+	}
+
+	public function test_origin_404_increments_negative_counter(): void {
+		$scope        = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		$capturedArgs = null;
+
+		$handler = new RequestHandler(
+			$this->resolver( $this->config() ),
+			$this->originClient( new OriginResponse( 404, '', '' ) ),
+			new FileWriter(),
+			new Counters(),
+			new NegativeCache(),
+			$this->capturingResponder(),
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		Functions\when( 'wp_check_filetype' )->justReturn(
+			[
+				'ext'  => 'jpg',
+				'type' => 'image/jpeg',
+			]
+		);
+		Functions\when( 'get_transient' )->justReturn( false );
+		Functions\when( 'set_transient' )->justReturn( true );
+		Functions\when( 'get_option' )->justReturn( 0 );
+		Functions\expect( 'update_option' )
+			->once()
+			->andReturnUsing(
+				static function ( string $option, int $value ) use ( &$capturedArgs ): bool {
+					$capturedArgs = [ $option, $value ];
+					return true;
+				}
+			);
+
+		$handler->handle( '/wp-content/uploads/2026/06/photo.jpg' );
+
+		self::assertSame( [ Counters::OPTION_NEGATIVE_COUNT, 1 ], $capturedArgs );
+	}
+
+	// -------------------------------------------------------------------------
+	// Miss-fallback: Origin 5xx / timeout → no cache
+	// -------------------------------------------------------------------------
+
+	public function test_origin_500_serves_local_404_without_caching(): void {
+		$scope     = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		$responder = $this->capturingResponder();
+
+		$handler = new RequestHandler(
+			$this->resolver( $this->config() ),
+			$this->originClient( new OriginResponse( 500, '', '' ) ),
+			new FileWriter(),
+			new Counters(),
+			new NegativeCache(),
+			$responder,
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		Functions\when( 'wp_check_filetype' )->justReturn(
+			[
+				'ext'  => 'jpg',
+				'type' => 'image/jpeg',
+			]
+		);
+		Functions\when( 'get_transient' )->justReturn( false );
+		Functions\expect( 'set_transient' )->never();
+
+		$handled = $handler->handle( '/wp-content/uploads/2026/06/photo.jpg' );
+
+		self::assertTrue( $handled );
+		// The header should be absent (empty string), indicating no negative-cache marker.
+		self::assertSame( '', $responder->served404['xUploadsProxy'] ?? null );
+	}
+
+	public function test_origin_timeout_zero_status_serves_local_404_without_caching(): void {
+		$scope     = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		$responder = $this->capturingResponder();
+
+		$handler = new RequestHandler(
+			$this->resolver( $this->config() ),
+			$this->originClient( new OriginResponse( 0, '', '' ) ),
+			new FileWriter(),
+			new Counters(),
+			new NegativeCache(),
+			$responder,
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		Functions\when( 'wp_check_filetype' )->justReturn(
+			[
+				'ext'  => 'jpg',
+				'type' => 'image/jpeg',
+			]
+		);
+		Functions\when( 'get_transient' )->justReturn( false );
+		Functions\expect( 'set_transient' )->never();
+
+		$handled = $handler->handle( '/wp-content/uploads/2026/06/photo.jpg' );
+
+		self::assertTrue( $handled );
+		self::assertSame( '', $responder->served404['xUploadsProxy'] ?? null );
+	}
+
+	// -------------------------------------------------------------------------
+	// Miss-fallback: Negative-cache short-circuit
+	// -------------------------------------------------------------------------
+
+	public function test_negative_cached_path_short_circuits_without_origin_fetch(): void {
+		$scope                 = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		[ $fetcher, $counter ] = $this->countingOriginClient( new OriginResponse( 200, 'BYTES', 'image/jpeg' ) );
+		$responder             = $this->capturingResponder();
+
+		$handler = new RequestHandler(
+			$this->resolver( $this->config() ),
+			$fetcher,
+			new FileWriter(),
+			new Counters(),
+			new NegativeCache(),
+			$responder,
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		Functions\when( 'wp_check_filetype' )->justReturn(
+			[
+				'ext'  => 'jpg',
+				'type' => 'image/jpeg',
+			]
+		);
+		// get_transient returns '1': this path is already negative-cached.
+		Functions\when( 'get_transient' )->justReturn( '1' );
+
+		$handled = $handler->handle( '/wp-content/uploads/2026/06/photo.jpg' );
+
+		self::assertTrue( $handled );
+		self::assertSame( 0, $counter->hits, 'No Origin fetch should occur for a negative-cached path.' );
+		self::assertSame( 'negative', $responder->served404['xUploadsProxy'] ?? null );
+		self::assertFileDoesNotExist( $this->baseDir . '/2026/06/photo.jpg' );
 	}
 }

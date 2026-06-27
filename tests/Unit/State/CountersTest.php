@@ -45,4 +45,26 @@ final class CountersTest extends TestCase {
 
 		self::assertSame( 5, ( new Counters() )->recordDownload() );
 	}
+
+	public function test_negative_count_reads_the_stored_count(): void {
+		Functions\expect( 'get_option' )
+			->once()
+			->with( Counters::OPTION_NEGATIVE_COUNT, 0 )
+			->andReturn( 3 );
+
+		self::assertSame( 3, ( new Counters() )->negativeCount() );
+	}
+
+	public function test_record_negative_increments_and_persists(): void {
+		Functions\expect( 'get_option' )
+			->once()
+			->with( Counters::OPTION_NEGATIVE_COUNT, 0 )
+			->andReturn( 2 );
+
+		Functions\expect( 'update_option' )
+			->once()
+			->with( Counters::OPTION_NEGATIVE_COUNT, 3, false );
+
+		self::assertSame( 3, ( new Counters() )->recordNegative() );
+	}
 }

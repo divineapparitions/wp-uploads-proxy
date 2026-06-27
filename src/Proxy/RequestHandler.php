@@ -8,6 +8,7 @@ use DivineApparitions\UploadsProxy\Config\ConfigResolver;
 use DivineApparitions\UploadsProxy\Config\Mode;
 use DivineApparitions\UploadsProxy\Registrable;
 use DivineApparitions\UploadsProxy\State\Counters;
+use DivineApparitions\UploadsProxy\State\NegativeCache;
 
 /**
  * Resolves a Miss by intercepting the request for the missing file (ADR-0001).
@@ -21,24 +22,32 @@ use DivineApparitions\UploadsProxy\State\Counters;
  * `X-Uploads-Proxy: download`. Once the file is on disk the web server serves
  * subsequent requests directly, so there is no second Origin fetch.
  *
+ * When the Origin returns 404 or 410 the handler records a short-lived Negative
+ * cache entry (via {@see NegativeCache}) and serves a local 404 marked with
+ * `X-Uploads-Proxy: negative`. A repeat Miss for the same path short-circuits
+ * the Negative cache without re-hitting the Origin. A 5xx or transport timeout
+ * is NOT cached, so the next request retries the Origin.
+ *
  * This replaces the superseded URL-rewriting `MediaProxy` (ADR-0001).
  */
 final class RequestHandler implements Registrable {
 
 	/**
-	 * @param ConfigResolver           $resolver        Effective configuration source.
-	 * @param OriginFetcher            $originClient    Fetches files from the Origin.
-	 * @param FileWriter               $writer          Atomic uploads writer.
-	 * @param Counters                 $counters        Downloaded-total state.
-	 * @param Responder                $responder       Serves the bytes back to the browser.
-	 * @param (callable(): UploadsScope) $scopeFactory  Builds the live uploads scope (deferred to request time).
-	 * @param (callable(): string)     $environmentType Resolves the current environment type.
+	 * @param ConfigResolver             $resolver        Effective configuration source.
+	 * @param OriginFetcher              $originClient    Fetches files from the Origin.
+	 * @param FileWriter                 $writer          Atomic uploads writer.
+	 * @param Counters                   $counters        Download-total and negative-cache-total state.
+	 * @param NegativeCache              $negativeCache   Short-lived record of paths absent on the Origin.
+	 * @param Responder                  $responder       Serves the bytes (or 404) back to the browser.
+	 * @param (callable(): UploadsScope) $scopeFactory    Builds the live uploads scope (deferred to request time).
+	 * @param (callable(): string)       $environmentType Resolves the current environment type.
 	 */
 	public function __construct(
 		private readonly ConfigResolver $resolver,
 		private readonly OriginFetcher $originClient,
 		private readonly FileWriter $writer,
 		private readonly Counters $counters,
+		private readonly NegativeCache $negativeCache,
 		private readonly Responder $responder,
 		private $scopeFactory,
 		private $environmentType,
@@ -65,9 +74,9 @@ final class RequestHandler implements Registrable {
 	}
 
 	/**
-	 * Resolve a Miss for $requestUri. Returns true when the request was proxied
-	 * (file downloaded, written, and served), false when the handler stayed inert
-	 * or the request was not a serviceable Miss.
+	 * Resolve a Miss for $requestUri. Returns true when the handler emitted a
+	 * response (download, negative-cache, or fallback 404), false when it stayed
+	 * inert (request not in scope, plugin off, file already present locally, etc.).
 	 *
 	 * Separated from {@see RequestHandler::onTemplateRedirect()} so it can be
 	 * driven directly with an explicit URI in tests.
@@ -105,24 +114,41 @@ final class RequestHandler implements Registrable {
 			return false;
 		}
 
+		// Short-circuit: if this path is already known to be absent on the Origin,
+		// serve a local 404 immediately without re-hitting the Origin.
+		if ( $this->negativeCache->isNegative( $relativePath ) ) {
+			$this->responder->serve404( 'negative' );
+			return true;
+		}
+
 		$response = $this->originClient->fetch(
 			new OriginRequest( $config->origin(), $requestUri, $config->basicAuth() )
 		);
 
-		if ( ! $response->isOk() ) {
-			return false;
+		if ( $response->isOk() ) {
+			// Atomically save into the uploads directory so the web server serves
+			// every subsequent request directly (no re-proxy).
+			if ( ! $this->writer->write( $target, $response->body() ) ) {
+				return false;
+			}
+
+			$this->counters->recordDownload();
+			$this->responder->serveDownload( $response->body(), $response->contentType() );
+			return true;
 		}
 
-		// Atomically save into the uploads directory so the web server serves
-		// every subsequent request directly (no re-proxy).
-		if ( ! $this->writer->write( $target, $response->body() ) ) {
-			return false;
+		if ( $response->isGone() ) {
+			// 404 / 410: the file is genuinely absent on the Origin.
+			// Record a Negative cache entry to short-circuit future Misses.
+			$this->negativeCache->record( $relativePath );
+			$this->counters->recordNegative();
+			$this->responder->serve404( 'negative' );
+			return true;
 		}
 
-		$this->counters->recordDownload();
-
-		$this->responder->serveDownload( $response->body(), $response->contentType() );
-
+		// 5xx or transport timeout: a transient blip — do NOT cache so the next
+		// request retries the Origin.
+		$this->responder->serve404( '' );
 		return true;
 	}
 }

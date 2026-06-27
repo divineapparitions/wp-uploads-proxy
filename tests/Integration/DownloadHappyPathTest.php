@@ -15,6 +15,7 @@ use DivineApparitions\UploadsProxy\Proxy\RequestHandler;
 use DivineApparitions\UploadsProxy\Proxy\Responder;
 use DivineApparitions\UploadsProxy\Proxy\UploadsScope;
 use DivineApparitions\UploadsProxy\State\Counters;
+use DivineApparitions\UploadsProxy\State\NegativeCache;
 use WP_UnitTestCase;
 
 /**
@@ -75,6 +76,7 @@ final class DownloadHappyPathTest extends WP_UnitTestCase {
 		remove_filter( 'pre_http_request', [ $this, 'mockOrigin' ], 10 );
 		$this->resetUploads();
 		delete_option( Counters::OPTION_DOWNLOADED );
+		delete_option( Counters::OPTION_NEGATIVE_COUNT );
 		parent::tear_down();
 	}
 
@@ -206,6 +208,7 @@ final class DownloadHappyPathTest extends WP_UnitTestCase {
 			new OriginClient(),
 			new FileWriter(),
 			new Counters(),
+			new NegativeCache(),
 			$this->capturingResponder(),
 			static fn (): UploadsScope => UploadsScope::fromWordPress(),
 			static fn (): string => 'production',
@@ -235,6 +238,7 @@ final class DownloadHappyPathTest extends WP_UnitTestCase {
 			new OriginClient(),
 			new FileWriter(),
 			new Counters(),
+			new NegativeCache(),
 			$this->capturingResponder(),
 			static fn (): UploadsScope => UploadsScope::fromWordPress(),
 			static fn (): string => 'local',
@@ -253,6 +257,7 @@ final class DownloadHappyPathTest extends WP_UnitTestCase {
 			new OriginClient(),
 			new FileWriter(),
 			new Counters(),
+			new NegativeCache(),
 			$responder,
 			static fn (): UploadsScope => UploadsScope::fromWordPress(),
 			static fn (): string => 'local',
@@ -286,11 +291,18 @@ final class DownloadHappyPathTest extends WP_UnitTestCase {
 			/** @var array<string, string> */
 			public array $served = [];
 
+			/** @var array{xUploadsProxy: string}|array{} */
+			public array $served404 = [];
+
 			public function serveDownload( string $bytes, string $contentType ): void {
 				$this->served = [
 					'bytes'       => $bytes,
 					'contentType' => $contentType,
 				];
+			}
+
+			public function serve404( string $xUploadsProxy ): void {
+				$this->served404 = [ 'xUploadsProxy' => $xUploadsProxy ];
 			}
 		};
 	}

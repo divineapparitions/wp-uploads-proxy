@@ -14,6 +14,7 @@ use DivineApparitions\UploadsProxy\Proxy\RequestHandler;
 use DivineApparitions\UploadsProxy\Proxy\UploadsScope;
 use DivineApparitions\UploadsProxy\Settings\Settings;
 use DivineApparitions\UploadsProxy\State\Counters;
+use DivineApparitions\UploadsProxy\State\NegativeCache;
 
 /**
  * Wires the plugin's components into WordPress.
@@ -48,6 +49,7 @@ final class Plugin {
 				new OriginClient(),
 				new FileWriter(),
 				new Counters(),
+				new NegativeCache(),
 				new HttpResponder(),
 				static fn (): UploadsScope => UploadsScope::fromWordPress(),
 				static fn (): string => wp_get_environment_type(),

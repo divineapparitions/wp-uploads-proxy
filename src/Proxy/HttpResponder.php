@@ -28,4 +28,16 @@ final class HttpResponder implements Responder {
 
 		exit;
 	}
+
+	public function serve404( string $xUploadsProxy ): void {
+		if ( ! headers_sent() ) {
+			http_response_code( 404 );
+
+			if ( '' !== $xUploadsProxy ) {
+				header( 'X-Uploads-Proxy: ' . $xUploadsProxy );
+			}
+		}
+
+		exit;
+	}
 }
