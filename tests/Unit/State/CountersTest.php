@@ -67,4 +67,25 @@ final class CountersTest extends TestCase {
 
 		self::assertSame( 3, ( new Counters() )->recordNegative() );
 	}
+
+	public function test_reset_zeroes_both_counters(): void {
+		$zeroed = [];
+
+		Functions\when( 'update_option' )->alias(
+			static function ( string $name, int $value ) use ( &$zeroed ): bool {
+				$zeroed[ $name ] = $value;
+				return true;
+			}
+		);
+
+		( new Counters() )->reset();
+
+		self::assertSame(
+			[
+				Counters::OPTION_DOWNLOADED     => 0,
+				Counters::OPTION_NEGATIVE_COUNT => 0,
+			],
+			$zeroed
+		);
+	}
 }

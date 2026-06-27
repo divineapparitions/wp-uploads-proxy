@@ -12,7 +12,7 @@ namespace DivineApparitions\UploadsProxy\State;
  * downloaded-and-served from the Origin. The count is a non-autoloaded option so
  * it never bloats the autoloaded options cache.
  */
-final class Counters {
+final class Counters implements CountersStore {
 
 	/**
 	 * Option name for the downloaded-files total.
@@ -56,5 +56,16 @@ final class Counters {
 		update_option( self::OPTION_NEGATIVE_COUNT, $next, false );
 
 		return $next;
+	}
+
+	/**
+	 * Reset both aggregate totals to zero.
+	 *
+	 * Used by the `wp uploads-proxy clear-cache` command to give CI a clean slate.
+	 * This only touches the counter options; it never deletes downloaded media.
+	 */
+	public function reset(): void {
+		update_option( self::OPTION_DOWNLOADED, 0, false );
+		update_option( self::OPTION_NEGATIVE_COUNT, 0, false );
 	}
 }

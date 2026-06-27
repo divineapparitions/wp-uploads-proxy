@@ -6,6 +6,8 @@ namespace DivineApparitions\UploadsProxy;
 
 use DivineApparitions\UploadsProxy\Admin\OriginProbe;
 use DivineApparitions\UploadsProxy\Admin\SettingsPage;
+use DivineApparitions\UploadsProxy\Cli\Command;
+use DivineApparitions\UploadsProxy\Cli\CommandRunner;
 use DivineApparitions\UploadsProxy\Config\ConstantsFirstResolver;
 use DivineApparitions\UploadsProxy\Config\SystemEnvironment;
 use DivineApparitions\UploadsProxy\Proxy\FileWriter;
@@ -33,6 +35,11 @@ final class Plugin {
 	private array $components;
 
 	/**
+	 * The shared command logic for the WP-CLI adapter.
+	 */
+	private readonly CommandRunner $commandRunner;
+
+	/**
 	 * @param string $file    Absolute path to the main plugin file.
 	 * @param string $version Plugin version.
 	 */
@@ -40,9 +47,12 @@ final class Plugin {
 		private readonly string $file,
 		private readonly string $version,
 	) {
-		$settings = new Settings();
-		$resolver = new ConstantsFirstResolver( $settings, new SystemEnvironment() );
-		$counters = new Counters();
+		$settings      = new Settings();
+		$resolver      = new ConstantsFirstResolver( $settings, new SystemEnvironment() );
+		$counters      = new Counters();
+		$negativeCache = new NegativeCache();
+
+		$this->commandRunner = new CommandRunner( $resolver, $counters, $negativeCache );
 
 		$this->components = [
 			new SettingsPage( $settings, $resolver, $counters, new OriginProbe( new OriginClient() ) ),
@@ -51,7 +61,7 @@ final class Plugin {
 				new OriginClient(),
 				new FileWriter(),
 				$counters,
-				new NegativeCache(),
+				$negativeCache,
 				new HttpResponder(),
 				static fn (): UploadsScope => UploadsScope::fromWordPress(),
 				static fn (): string => wp_get_environment_type(),
@@ -68,6 +78,10 @@ final class Plugin {
 		foreach ( $this->components as $component ) {
 			$component->register();
 		}
+
+		// Register the WP-CLI command only when WP-CLI is the runtime, so it is
+		// inert during a normal web request (issue #8).
+		Command::register( $this->commandRunner );
 	}
 
 	/**

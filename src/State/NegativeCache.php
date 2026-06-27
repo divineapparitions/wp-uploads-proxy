@@ -16,7 +16,7 @@ namespace DivineApparitions\UploadsProxy\State;
  * keys are always within the WordPress 172-character transient-name limit regardless
  * of path depth.
  */
-final class NegativeCache {
+final class NegativeCache implements NegativeStore {
 
 	/**
 	 * Transient key prefix.
@@ -47,6 +47,32 @@ final class NegativeCache {
 	 */
 	public function record( string $relativePath ): void {
 		set_transient( $this->key( $relativePath ), '1', self::TTL );
+	}
+
+	/**
+	 * Clear every Negative-cache entry, returning the number of entries removed.
+	 *
+	 * The plugin keeps no manifest of which paths have been cached, so individual
+	 * keys cannot be replayed through `delete_transient`. Instead the whole
+	 * `uploads_proxy_neg_*` transient family is removed in one query: both the
+	 * `_transient_` value rows and their `_transient_timeout_` siblings. This only
+	 * deletes the short-lived transients — it never touches downloaded media on
+	 * disk. Returns the number of entries cleared (each entry owns two option rows).
+	 */
+	public function clearAll(): int {
+		global $wpdb;
+
+		$like = $wpdb->esc_like( '_transient_' . self::KEY_PREFIX ) . '%';
+		$rows = (int) $wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+				$like,
+				$wpdb->esc_like( '_transient_timeout_' . self::KEY_PREFIX ) . '%'
+			)
+		);
+
+		// Each cached entry persists as two option rows (value + timeout).
+		return intdiv( $rows, 2 );
 	}
 
 	/**

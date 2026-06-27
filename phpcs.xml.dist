@@ -65,6 +65,14 @@
 	<rule ref="WordPress.WP.AlternativeFunctions">
 		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
+	<!--
+		Test doubles legitimately swap a WordPress global (e.g. $GLOBALS['wpdb'])
+		to exercise code that reaches for it via `global`. Production code never
+		does this, so the override prohibition applies everywhere but the tests.
+	-->
+	<rule ref="WordPress.WP.GlobalVariablesOverride">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
 
 	<!-- Target the minimum supported versions. -->
 	<config name="minimum_wp_version" value="6.5"/>

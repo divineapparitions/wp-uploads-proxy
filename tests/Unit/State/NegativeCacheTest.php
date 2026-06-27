@@ -110,4 +110,43 @@ final class NegativeCacheTest extends TestCase {
 		self::assertCount( 2, $keys );
 		self::assertSame( $keys[0], $keys[1] );
 	}
+
+	public function test_clear_all_deletes_the_negative_transient_family_and_returns_count(): void {
+		$fakeWpdb = new class() {
+
+			public string $options    = 'wp_options';
+			public ?string $lastQuery = null;
+			public ?string $lastLike  = null;
+
+			public function esc_like( string $text ): string {
+				$this->lastLike = $text;
+				return $text;
+			}
+
+			/**
+			 * @param array<int, mixed> $args
+			 */
+			public function prepare( string $query, ...$args ): string {
+				$this->lastQuery = $query;
+				return $query;
+			}
+
+			public function query( string $query ): int {
+				// Two rows per entry (value + timeout); pretend three entries cleared.
+				return 6;
+			}
+		};
+
+		$GLOBALS['wpdb'] = $fakeWpdb;
+
+		$cleared = ( new NegativeCache() )->clearAll();
+
+		// Six option rows = three negative-cache entries cleared.
+		self::assertSame( 3, $cleared );
+		self::assertNotNull( $fakeWpdb->lastQuery );
+		self::assertStringContainsString( '_transient_', (string) $fakeWpdb->lastLike );
+		self::assertStringContainsString( 'uploads_proxy_neg_', (string) $fakeWpdb->lastLike );
+
+		unset( $GLOBALS['wpdb'] );
+	}
 }

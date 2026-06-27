@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-06-27
+
+### Added
+
+- `wp uploads-proxy` WP-CLI command (issue #8) so setup and reset can be scripted
+  in CI without admin clicks. `wp uploads-proxy status` reports the active state,
+  the effective Origin, the mode and each value's source (read from the resolver),
+  and both counters in a scriptable form (`--format=table|json|yaml|csv`, default
+  `table`). `wp uploads-proxy clear-cache` clears every Negative-cache transient and
+  resets the downloaded and Negative-cache counters to zero, giving CI a clean slate
+  between runs — it never deletes downloaded media from the uploads directory. The
+  command registers only when WP-CLI is the runtime (`defined( 'WP_CLI' ) && WP_CLI`),
+  so it is inert in a web request.
+- `CommandRunner` (`src/Cli/`): the WordPress-free seam the WP-CLI adapter delegates
+  to — `status()` reuses the existing `Diagnostics` view-model; `clearCache()` clears
+  the Negative cache and resets the counters. Fully unit-tested (Brain Monkey).
+- `Counters::reset()`: zeroes both aggregate totals.
+- `NegativeCache::clearAll()`: removes the whole `uploads_proxy_neg_*` transient
+  family in one query (value rows and their `_transient_timeout_` siblings),
+  returning the number of entries cleared. Touches only transients, never media.
+- `CountersStore` / `NegativeStore` interfaces (`src/State/`): the narrow surfaces
+  the command logic depends on, so it can be unit tested against fakes without the
+  WordPress glue.
+- Integration suite `CliCommandTest` (wp-env `tests-cli`, authored-only): asserts
+  `status()` against real options/resolver and that `clearCache()` clears real
+  transients, zeroes the counter options, and leaves a downloaded file on disk.
+
 ## [0.7.0] - 2026-06-27
 
 ### Added
@@ -171,7 +198,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Development tooling: PHP_CodeSniffer (WPCS), PHPStan, PHPUnit (Brain Monkey),
   and a GitHub Actions CI workflow across PHP 8.2–8.4.
 
-[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.4.0...v0.5.0
