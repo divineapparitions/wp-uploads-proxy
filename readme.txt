@@ -4,7 +4,7 @@ Tags: media, uploads, proxy, staging, development
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 8.2
-Stable tag: 0.3.0
+Stable tag: 0.9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,33 +12,52 @@ Proxy missing media to a production origin so staging and local environments don
 
 == Description ==
 
-When you pull a production database into a staging or local environment, every media URL points at a file you didn't copy. Uploads Proxy rewrites those URLs to a configured production origin only when the file is missing locally, so pages render with real images without syncing the entire uploads directory.
+When you pull a production database into a staging or local environment, every media URL points at a file you didn't copy — pages render with broken images and dead file links. Uploads Proxy intercepts the request for any *missing* uploads file and resolves it against a configured production **Origin**, so pages render with real media without syncing the entire uploads directory.
 
-It works by filtering the URLs WordPress generates for attachments — no web-server rewrite rules or 404 handlers required.
+Because it works at the request level — hooking `template_redirect` when the web server routes a missing file to `index.php` (nginx `try_files`, used by DDEV, Lando, and Pantheon) — it catches *every* missing upload, including images embedded directly in post content, size derivatives, and `srcset` candidates, not just the URLs WordPress generates for attachments.
+
+It resolves a missing file in one of two modes:
+
+* **Download mode** (default): streams the file from the Origin, saves it into the local uploads directory, and serves it. Every later request is served by the web server, so your local site accumulates exactly the subset of media your tests actually touch — never the whole uploads folder.
+* **Hotlink mode** (opt-in): issues a temporary redirect to the file on the Origin, writing nothing locally.
+
+Configuration lives in `wp-config` constants / environment variables (with a database-option fallback), so it survives every database pull and configures itself hands-free in CI. The plugin is inert on production and stays off until an Origin is configured.
 
 Features:
 
-* Rewrites attachment, image, and `srcset` URLs to a production origin.
-* Optional local-file check, so only missing files are proxied.
-* Inert on production (guards on `wp_get_environment_type()`).
-* No server configuration needed.
+* Request-level interception — resolves content-embedded images, derivatives, and `srcset`, not just attachment URLs.
+* Download or Hotlink mode, chosen per environment.
+* Optional Basic Auth for fetching from a locked Test/Dev Origin.
+* Negative cache so a file genuinely missing on the Origin stops re-hitting it, while transient errors (5xx/timeout) retry on the next request.
+* Write hardening: executable file types are refused and paths are contained to the uploads directory.
+* Diagnostics settings page showing the effective config and its source, the counters, and a "test Origin connection" button.
+* `wp uploads-proxy` WP-CLI command (`status` / `clear-cache`) for scripting setup and reset in CI.
+* Inert on production; off until an Origin is configured.
 
 == Installation ==
 
 1. Upload the `uploads-proxy` directory to `/wp-content/plugins/`.
 2. Run `composer install --no-dev` inside the plugin directory to generate the autoloader.
 3. Activate the plugin through the **Plugins** menu in WordPress.
-4. Go to **Settings → Uploads Proxy**, enable proxying, and set the production URL.
+4. Configure the Origin and mode via a `wp-config` constant or environment variable (recommended — these survive a production database pull and work hands-free in CI), or as a fallback from **Settings → Uploads Proxy**.
 
 == Frequently Asked Questions ==
 
 = Does this download files to my local environment? =
 
-No. It rewrites the URL so the browser requests the file directly from the production origin. Nothing is written to your local uploads directory.
+In Download mode (the default), yes — each missing file is fetched from the Origin once, saved into your local uploads directory, and served; every later request is served directly by the web server. In Hotlink mode nothing is written locally — the browser is redirected to the file on the Origin.
+
+= How do I configure it so my settings survive a database pull? =
+
+Set the Origin (and mode, and optional Basic Auth) in a `wp-config` constant or an environment variable. Configuration resolves in the order constant → environment variable → database option → off, so constants/env always win over anything a pulled production database might carry. The settings page is only a fallback for when no constant or env var is set.
 
 = Will it run on production? =
 
 No. When `wp_get_environment_type()` returns `production`, the proxy stays inactive.
+
+= I'm on Apache and nothing happens. Why? =
+
+Request interception needs the web server to route a missing file to `index.php`. On nginx (DDEV, Lando, Pantheon) this always happens. On Apache it only happens with pretty permalinks enabled — the plugin shows an admin notice for this case. Enable pretty permalinks at **Settings → Permalinks**.
 
 = Why does it need Composer? =
 
@@ -46,8 +65,27 @@ The plugin uses a PSR-4 autoloader generated by Composer. Run `composer install`
 
 == Changelog ==
 
+= 0.9.0 =
+* Add an admin notice for the Apache plain-permalinks edge case: when the proxy is active on Apache without pretty permalinks (so interception can't fire), a notice explains that pretty permalinks are required. Never shown on nginx, with pretty permalinks, when inert, or on production.
+
+= 0.8.0 =
+* Add the `wp uploads-proxy` WP-CLI command. `status` reports the active state, effective Origin, mode and each value's source, and both counters (`--format=table|json|yaml|csv`). `clear-cache` clears the Negative cache and resets the counters without deleting downloaded media. Registered only under WP-CLI.
+
+= 0.7.0 =
+* Replace the plain settings form with a diagnostics-first **Settings → Uploads Proxy** page: status panel with the effective Origin/mode/Basic-Auth each labelled by source, the downloaded and Negative-cache counters, and a "test Origin connection" button (graded reachable on a 2xx response only).
+* Fields are editable only when no constant/env var overrides them; an overridden field is shown read-only with its source. The Basic Auth password is write-only — never rendered into the page — and an empty save no longer blanks the stored password.
+
+= 0.6.0 =
+* Add Hotlink mode: when `mode = hotlink`, a Miss issues a `302` temporary redirect (never `301`) to the file on the Origin with an `X-Uploads-Proxy: hotlink` header, writing nothing locally. Download mode remains the default.
+
+= 0.5.0 =
+* Add the Miss-fallback + Negative cache. An Origin `404`/`410` serves a local `404` (`X-Uploads-Proxy: negative`) and records a short-lived transient so repeat Misses short-circuit without re-hitting the Origin; an Origin `5xx`/timeout serves `404` without caching so the next request retries.
+
+= 0.4.0 =
+* Harden the download writer: a two-layer gate denies executable extensions (`.php`, `.phtml`, `.cgi`, …) and admits only WordPress-permitted MIME types, so a disallowed type from the Origin returns a local `404` and writes nothing. Reinforces path containment and host-fixed Origin fetch.
+
 = 0.3.0 =
-* Add the request-interception walking skeleton: on a Miss for a missing Uploads path, Download mode fetches the file from the Origin, atomically saves it into the local uploads directory, and serves it with an `X-Uploads-Proxy: download` header. Replaces the URL-rewriting media proxy.
+* Add the request-interception walking skeleton (ADR-0001): on a Miss for a missing Uploads path, Download mode fetches the file from the Origin, atomically saves it into the local uploads directory, and serves it with an `X-Uploads-Proxy: download` header. Replaces the URL-rewriting media proxy.
 * Inert on production and until an Origin is configured. Stands up a `@wordpress/env` integration test harness that boots real WordPress with a mocked Origin.
 
 = 0.2.0 =
