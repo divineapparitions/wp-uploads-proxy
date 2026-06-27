@@ -62,6 +62,21 @@ final class OriginRequestTest extends TestCase {
 		self::assertSame( [], $request->headers() );
 	}
 
+	public function test_url_host_is_always_the_configured_origin_regardless_of_path_content(): void {
+		// Even if the relative path looks like it starts with a different host
+		// (e.g. if an attacker crafted a path starting with '//evil.com/'),
+		// ltrim strips the leading slashes so the fetch always targets origin.test.
+		$request = new OriginRequest(
+			'https://origin.test',
+			'//evil.example.com/file.jpg',
+			null
+		);
+
+		$parsedHost = parse_url( $request->url(), PHP_URL_HOST );
+
+		self::assertSame( 'origin.test', $parsedHost );
+	}
+
 	public function test_attaches_basic_auth_header_when_configured(): void {
 		$request = new OriginRequest(
 			'https://origin.test',

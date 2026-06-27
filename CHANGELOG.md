@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-27
+
+### Added
+
+- Download write-policy hardening (issue #4): `UploadsScope::isAllowedFile()` now
+  enforces a two-layer gate — (1) a hard deny on executable extensions (`.php`,
+  `.phtml`, `.pht`, `.phar`, `.cgi`, `.pl`, etc.) and (2) a WordPress allowed-MIME
+  gate via `wp_check_filetype()` so only file types the site explicitly permits are
+  ever written to the uploads directory. A stray unknown extension (e.g. `.bat`,
+  `.bin`) that slips through on the Origin returns a local `404` without writing
+  anything to disk.
+- Unit tests (Brain Monkey) covering the MIME/exec gate: `wp_check_filetype()`
+  returning `type=false` prevents both the write and the Origin fetch; executable
+  extensions short-circuit before any WordPress call.
+- Test documenting path-containment: `absolutePathFor()` with an absolute-path
+  input stays within the uploads basedir via `ltrim`, reinforcing the traversal
+  protection already in `relativePathFor()`.
+- Test documenting host-fixed Origin fetch: `OriginRequest::url()` always uses the
+  configured Origin host regardless of path content, so no arbitrary-host SSRF is
+  possible.
+
 ## [0.3.0] - 2026-06-17
 
 ### Added
@@ -71,7 +92,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Development tooling: PHP_CodeSniffer (WPCS), PHPStan, PHPUnit (Brain Monkey),
   and a GitHub Actions CI workflow across PHP 8.2–8.4.
 
-[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/philltran/wp-uploads-proxy/releases/tag/v0.1.0

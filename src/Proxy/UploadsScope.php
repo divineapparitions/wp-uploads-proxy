@@ -9,13 +9,17 @@ namespace DivineApparitions\UploadsProxy\Proxy;
  *
  * Maps an incoming request URI to a site-relative uploads path, rejecting
  * anything that escapes the uploads scope (paths outside the uploads URL prefix,
- * `..` traversal, null bytes), and answers whether a given file may be written
- * (a hard deny on executable extensions). Pure path logic with no WordPress
- * dependency, so it can be unit-tested directly; {@see UploadsScope::fromWordPress()}
- * builds one from `wp_upload_dir()`.
+ * `..` traversal, null bytes, absolute-path escapes), and answers whether a given
+ * file may be written. The write-policy gate has two layers:
+ *   1. A hard deny on executable extensions (pure PHP, no WordPress).
+ *   2. A WordPress allowed-MIME gate via `wp_check_filetype()`: only extensions
+ *      the site's allowed-MIME list recognises are permitted.
  *
- * The full mime/exec hardening and its exhaustive matrix are issue #4's job;
- * this implements the basic safe gate the walking skeleton needs.
+ * The path logic methods ({@see UploadsScope::relativePathFor()},
+ * {@see UploadsScope::absolutePathFor()}) have no WordPress dependency.
+ * {@see UploadsScope::isAllowedFile()} calls `wp_check_filetype()` and must run
+ * inside a WordPress bootstrap or a Brain Monkey test that stubs WP functions.
+ * {@see UploadsScope::fromWordPress()} builds an instance from `wp_upload_dir()`.
  */
 final class UploadsScope {
 
@@ -112,16 +116,30 @@ final class UploadsScope {
 	}
 
 	/**
-	 * Whether a relative uploads path may be written: in-scope and not an
-	 * executable extension.
+	 * Whether a relative uploads path may be written.
+	 *
+	 * Two-layer gate:
+	 *   1. Hard deny on executable extensions — no network call, no WordPress.
+	 *   2. WordPress allowed-MIME check via `wp_check_filetype()`: only extensions
+	 *      the site's allowed-MIME-type list recognises are written. This prevents
+	 *      a stray non-executable but disallowed file on the Origin (e.g. `.bat`,
+	 *      an unknown binary) from ever being saved locally.
+	 *
+	 * Callers must ensure WordPress (or a Brain Monkey stub) is available for the
+	 * second layer; the first layer is pure PHP.
 	 */
 	public function isAllowedFile( string $relativePath ): bool {
 		$extension = strtolower( pathinfo( $relativePath, PATHINFO_EXTENSION ) );
 
+		// Layer 1: hard deny on executable extensions — pure PHP, no WP call.
 		if ( '' === $extension || in_array( $extension, self::EXECUTABLE_EXTENSIONS, true ) ) {
 			return false;
 		}
 
-		return true;
+		// Layer 2: gate against WordPress's allowed-MIME-type list. Only extensions
+		// that wp_check_filetype() maps to a known, non-false type are permitted.
+		$check = wp_check_filetype( basename( $relativePath ) );
+
+		return false !== $check['type'];
 	}
 }

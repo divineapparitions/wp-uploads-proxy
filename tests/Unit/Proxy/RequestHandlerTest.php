@@ -126,6 +126,12 @@ final class RequestHandlerTest extends TestCase {
 			static fn (): string => 'production' === 'staging' ? 'production' : 'local',
 		);
 
+		Functions\when( 'wp_check_filetype' )->justReturn(
+			[
+				'ext'  => 'jpg',
+				'type' => 'image/jpeg',
+			]
+		);
 		Functions\when( 'get_option' )->justReturn( 0 );
 		Functions\expect( 'update_option' )->once();
 
@@ -211,6 +217,31 @@ final class RequestHandlerTest extends TestCase {
 
 		self::assertFalse( $handler->handle( '/wp-content/uploads/2026/06/photo.jpg' ) );
 		self::assertSame( 'ALREADY-HERE', file_get_contents( $this->baseDir . '/2026/06/photo.jpg' ) );
+	}
+
+	public function test_disallowed_mime_type_on_origin_200_writes_nothing(): void {
+		// wp_check_filetype returns type=false: the site does not allow this extension.
+		// Even though the Origin returns 200, nothing is written and the handler returns false.
+		Functions\when( 'wp_check_filetype' )->justReturn(
+			[
+				'ext'  => false,
+				'type' => false,
+			]
+		);
+
+		$scope   = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		$handler = new RequestHandler(
+			$this->resolver( $this->config() ),
+			$this->originClient( new OriginResponse( 200, 'MALWARE-BYTES', 'application/octet-stream' ) ),
+			new FileWriter(),
+			new Counters(),
+			$this->capturingResponder(),
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		self::assertFalse( $handler->handle( '/wp-content/uploads/2026/06/payload.bat' ) );
+		self::assertFileDoesNotExist( $this->baseDir . '/2026/06/payload.bat' );
 	}
 
 	public function test_refuses_executable_extension_even_on_origin_200(): void {
