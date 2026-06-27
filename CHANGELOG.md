@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-27
+
+### Added
+
+- Diagnostics-first settings page (issue #7): Settings → Uploads Proxy now leads
+  with a read-only status panel — active state, the effective Origin and mode each
+  labelled with their source (constant / env / DB, read from the resolver), the
+  Origin Basic Auth state, and the downloaded-total and Negative-cache counters —
+  replacing the scaffold's plain Settings-API form.
+- "Test Origin connection" button (Fork A): a `manage_options`-gated,
+  nonce-protected `admin_post` handler probes the Origin root (`GET {origin}/`,
+  Basic Auth attached) through the existing `OriginRequest`/`OriginClient` seam and
+  grades the result **2xx-only as reachable** — every 4xx, 5xx, and transport
+  error (status 0) is reported unreachable, with the actual HTTP status shown so a
+  developer can tell "HTTP 403" from "no response".
+- `OriginProbe` + `ProbeResult` (`src/Admin/`): the WordPress-free probe seam and
+  its 2xx-only grading, fully unit-tested.
+- `Diagnostics::basicAuthUsername()`: exposes the effective Basic Auth username for
+  the read-only label without revealing the password.
+
+### Changed
+
+- Per ADR-0002, each DB field (Origin, mode, Basic Auth) renders editable only when
+  no constant/env var overrides it; an overridden field is shown read-only with its
+  source. Overridden fields round-trip their stored DB value through hidden inputs
+  so saving never wipes a shadowed value.
+- Basic Auth password is now **write-only** (Fork B): the real bytes are never
+  rendered into the DOM — the status panel shows a fixed mask (`••••••••`) when a
+  password is stored and "Not set" otherwise, and the editor offers an empty field
+  that only overwrites the stored password when filled in. `Settings::sanitize()`
+  now preserves the stored `basic_auth_pass` on an empty submission instead of
+  blanking it.
+
 ## [0.6.0] - 2026-06-27
 
 ### Added
@@ -138,7 +171,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Development tooling: PHP_CodeSniffer (WPCS), PHPStan, PHPUnit (Brain Monkey),
   and a GitHub Actions CI workflow across PHP 8.2–8.4.
 
-[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.3.0...v0.4.0

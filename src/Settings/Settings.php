@@ -110,6 +110,11 @@ final class Settings {
 	/**
 	 * Sanitise raw input from the settings form.
 	 *
+	 * The password is a write-only field: the page never renders the stored
+	 * password back into the form, so an empty submission means "keep what is
+	 * stored" rather than "blank it". Only a non-empty value overwrites the
+	 * stored password (issue #7, Fork B).
+	 *
 	 * @param mixed $input Raw submitted value.
 	 *
 	 * @return SettingsArray
@@ -118,6 +123,8 @@ final class Settings {
 		$input = is_array( $input ) ? $input : [];
 
 		$mode = isset( $input['mode'] ) ? (string) $input['mode'] : '';
+
+		$submittedPass = isset( $input['basic_auth_pass'] ) ? (string) $input['basic_auth_pass'] : '';
 
 		return [
 			'enabled'         => ! empty( $input['enabled'] ),
@@ -128,9 +135,8 @@ final class Settings {
 			'basic_auth_user' => isset( $input['basic_auth_user'] )
 				? sanitize_text_field( (string) $input['basic_auth_user'] )
 				: '',
-			'basic_auth_pass' => isset( $input['basic_auth_pass'] )
-				? (string) $input['basic_auth_pass']
-				: '',
+			// Write-only: preserve the stored password when none is submitted.
+			'basic_auth_pass' => '' !== $submittedPass ? $submittedPass : $this->dbBasicAuthPass(),
 		];
 	}
 }

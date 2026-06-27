@@ -21,6 +21,14 @@ final class SettingsTest extends TestCase {
 		// esc_url_raw / sanitize_text_field are thin escapers here; pass through.
 		Functions\when( 'esc_url_raw' )->returnArg();
 		Functions\when( 'sanitize_text_field' )->returnArg();
+
+		// sanitize() now reads the stored password to preserve it on an empty
+		// submit (write-only field, Fork B), so the DB-read seam must be stubbed.
+		// Default: nothing stored. Individual tests override get_option.
+		Functions\when( 'get_option' )->justReturn( [] );
+		Functions\when( 'wp_parse_args' )->alias(
+			static fn ( $args, $defaults ): array => array_merge( $defaults, is_array( $args ) ? $args : [] )
+		);
 	}
 
 	protected function tearDown(): void {
@@ -54,6 +62,42 @@ final class SettingsTest extends TestCase {
 		self::assertSame( 'download', $result['mode'] );
 		self::assertSame( '', $result['basic_auth_user'] );
 		self::assertSame( '', $result['basic_auth_pass'] );
+	}
+
+	public function test_sanitize_preserves_stored_password_on_empty_submit(): void {
+		// The password field is write-only (Fork B): an empty submission must keep
+		// the stored password rather than blanking it.
+		Functions\when( 'get_option' )->justReturn( [ 'basic_auth_pass' => 'stored-secret' ] );
+
+		$result = ( new Settings() )->sanitize(
+			[
+				'basic_auth_user' => 'user',
+				'basic_auth_pass' => '',
+			]
+		);
+
+		self::assertSame( 'stored-secret', $result['basic_auth_pass'] );
+	}
+
+	public function test_sanitize_preserves_stored_password_when_field_absent(): void {
+		Functions\when( 'get_option' )->justReturn( [ 'basic_auth_pass' => 'stored-secret' ] );
+
+		$result = ( new Settings() )->sanitize( [ 'basic_auth_user' => 'user' ] );
+
+		self::assertSame( 'stored-secret', $result['basic_auth_pass'] );
+	}
+
+	public function test_sanitize_overwrites_password_when_a_new_one_is_submitted(): void {
+		Functions\when( 'get_option' )->justReturn( [ 'basic_auth_pass' => 'stored-secret' ] );
+
+		$result = ( new Settings() )->sanitize(
+			[
+				'basic_auth_user' => 'user',
+				'basic_auth_pass' => 'new-secret',
+			]
+		);
+
+		self::assertSame( 'new-secret', $result['basic_auth_pass'] );
 	}
 
 	public function test_sanitize_coerces_unknown_mode_to_download(): void {

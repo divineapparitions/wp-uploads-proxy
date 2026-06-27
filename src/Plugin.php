@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DivineApparitions\UploadsProxy;
 
+use DivineApparitions\UploadsProxy\Admin\OriginProbe;
 use DivineApparitions\UploadsProxy\Admin\SettingsPage;
 use DivineApparitions\UploadsProxy\Config\ConstantsFirstResolver;
 use DivineApparitions\UploadsProxy\Config\SystemEnvironment;
@@ -41,14 +42,15 @@ final class Plugin {
 	) {
 		$settings = new Settings();
 		$resolver = new ConstantsFirstResolver( $settings, new SystemEnvironment() );
+		$counters = new Counters();
 
 		$this->components = [
-			new SettingsPage( $settings ),
+			new SettingsPage( $settings, $resolver, $counters, new OriginProbe( new OriginClient() ) ),
 			new RequestHandler(
 				$resolver,
 				new OriginClient(),
 				new FileWriter(),
-				new Counters(),
+				$counters,
 				new NegativeCache(),
 				new HttpResponder(),
 				static fn (): UploadsScope => UploadsScope::fromWordPress(),

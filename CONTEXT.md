@@ -77,7 +77,11 @@ repeated Misses for a genuinely-absent file stop re-hitting the Origin.
   them. (See `docs/adr/0002-constants-first-config.md`.)
 - The settings page is diagnostics-first: shows effective config + its source,
   active status, mode, and download/negative-cache counts, with a "test origin"
-  button. DB fields are editable only when no constant/env is set.
+  button. DB fields are editable only when no constant/env is set. The "test
+  origin" button probes the Origin root and grades **only a 2xx as reachable**
+  (4xx/5xx/transport-error are unreachable, with the status code surfaced). The
+  Basic Auth password is **write-only**: it is never rendered to the page —
+  masked when set, an empty submit keeps the stored value.
 - Download write policy: only file types permitted by `wp_check_filetype()` /
   the site's allowed mime types are saved, with a hard deny on executable
   extensions. Responses are streamed to a temp file and atomically renamed.
