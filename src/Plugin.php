@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DivineApparitions\UploadsProxy;
 
 use DivineApparitions\UploadsProxy\Admin\OriginProbe;
+use DivineApparitions\UploadsProxy\Admin\PermalinkNotice;
+use DivineApparitions\UploadsProxy\Admin\PermalinkNoticeRenderer;
 use DivineApparitions\UploadsProxy\Admin\SettingsPage;
 use DivineApparitions\UploadsProxy\Cli\Command;
 use DivineApparitions\UploadsProxy\Cli\CommandRunner;
@@ -56,6 +58,11 @@ final class Plugin {
 
 		$this->components = [
 			new SettingsPage( $settings, $resolver, $counters, new OriginProbe( new OriginClient() ) ),
+			new PermalinkNoticeRenderer(
+				$resolver,
+				new PermalinkNotice(),
+				static fn (): string => wp_get_environment_type(),
+			),
 			new RequestHandler(
 				$resolver,
 				new OriginClient(),

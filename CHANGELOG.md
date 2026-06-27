@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-06-27
+
+### Added
+
+- Apache-plain-permalinks admin notice (issue #9). Request interception relies on the
+  web server routing a missing uploads file to `index.php`. On nginx — the real target
+  (DDEV, Lando, Pantheon) — `try_files` always does this; on Apache the `index.php`
+  fallback only fires when pretty permalinks are enabled. When the proxy is active on
+  Apache with plain (default) permalinks it would silently appear to do nothing, so a
+  `manage_options`-gated `admin_notices` warning now explains that pretty permalinks are
+  required for interception and points the developer at Settings → Permalinks. nginx
+  never sees the notice, nor does a site with pretty permalinks, an inert/unconfigured
+  proxy, or a `wp_get_environment_type()` of `production` (the same inert-on-production
+  rule as request interception).
+- `PermalinkNotice` (`src/Admin/`): the WordPress-free decision seam — given
+  is-Apache, has-pretty-permalinks, and is-active it returns whether to show the notice.
+  Fully unit-tested (Brain Monkey-free) across the truth table.
+- `PermalinkNoticeRenderer` (`src/Admin/`): the thin `admin_notices` glue that reads
+  `$GLOBALS['is_apache']`, `get_option( 'permalink_structure' )`, and the resolver's
+  active state (gated by an injected environment-type callable, mirroring
+  `RequestHandler`), then renders the escaped, translated notice.
+- Integration suite `PermalinkNoticeTest` (wp-env `tests-cli`, authored-only): renders
+  the notice against real WordPress across the truth table plus the production and
+  non-admin gates.
+
 ## [0.8.0] - 2026-06-27
 
 ### Added

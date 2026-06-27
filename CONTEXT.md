@@ -58,8 +58,14 @@ repeated Misses for a genuinely-absent file stop re-hitting the Origin.
   mode possible. (See `docs/adr/0001-request-interception.md`.)
 - Reachability relies on the web server sending missing files to `index.php`
   (nginx `try_files`, which DDEV, Lando, and Pantheon all use). The proxy hooks
-  `template_redirect`. An admin notice covers the Apache-plain-permalinks edge
-  case.
+  `template_redirect`. A `manage_options`-gated `admin_notices` warning covers the
+  Apache-plain-permalinks edge case — on Apache the `index.php` fallback only fires
+  with pretty permalinks, so an active proxy with plain permalinks would silently
+  appear inert. The decision is a WordPress-free seam (`PermalinkNotice`, inputs
+  is-Apache / has-pretty-permalinks / is-active) behind a thin glue
+  (`PermalinkNoticeRenderer`) that reads `$GLOBALS['is_apache']`,
+  `permalink_structure`, and the resolver's active state. nginx and a
+  `production` environment never see it.
 - **Download mode is the default**; **Hotlink mode** is opt-in. An optional
   Basic Auth credential pair is attached to the outbound Origin request (for the
   occasional locked Test/Dev origin); the typical Origin is the public

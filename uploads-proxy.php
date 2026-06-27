@@ -11,7 +11,7 @@
  * Plugin Name:       Uploads Proxy
  * Plugin URI:        https://github.com/philltran/wp-uploads-proxy
  * Description:       Proxy missing media to a production origin so staging and local environments don't need a full copy of the uploads directory.
- * Version:           0.8.0
+ * Version:           0.9.0
  * Requires at least: 6.5
  * Requires PHP:      8.2
  * Author:            Divine Apparitions
@@ -37,7 +37,7 @@ if ( defined( __NAMESPACE__ . '\VERSION' ) ) {
 	return;
 }
 
-const VERSION             = '0.8.0';
+const VERSION             = '0.9.0';
 const MINIMUM_PHP_VERSION = '8.2';
 const MINIMUM_WP_VERSION  = '6.5';
 
