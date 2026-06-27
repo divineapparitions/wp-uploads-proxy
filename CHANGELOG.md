@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-06-27
+
+### Added
+
+- Uninstall hygiene (issue #10): deleting the plugin now removes all of its own
+  persisted state — the settings option, both aggregate counter options
+  (downloaded total + Negative-cache size), and every Negative-cache transient —
+  on the current site and, on multisite, every site. Downloaded media in the
+  uploads directory is deliberately left untouched: a developer uninstalling the
+  plugin must never lose media they might still need. Cleanup runs only in the
+  genuine uninstall context (`WP_UNINSTALL_PLUGIN`).
+- `Uninstaller` (`src/State/`): the WordPress-free seam behind uninstall. Given
+  `delete_option` and the Negative-cache clear as injected collaborators, it
+  deletes exactly the three known options and clears the transients. It owns no
+  filesystem collaborator, so it cannot delete a file — the "never delete media"
+  guarantee is structural, and is fully unit-tested.
+
+### Changed
+
+- `uninstall.php` is now thin glue around the `Uninstaller` seam: it enforces the
+  `WP_UNINSTALL_PLUGIN` guard, bootstraps the Composer autoloader, iterates every
+  site on multisite (`switch_to_blog`/`restore_current_blog`), and delegates the
+  cleanup. A self-contained literal-key fallback keeps uninstall robust even when
+  `vendor/` has been pruned.
+- Integration suite `UninstallTest` (wp-env `tests-cli`, authored-only): drives
+  the real `uninstall.php` against WordPress and asserts the options are deleted,
+  the transients cleared, downloaded media on disk is preserved, and that
+  including the file without `WP_UNINSTALL_PLUGIN` defined is a no-op.
+
 ## [0.9.0] - 2026-06-27
 
 ### Added
@@ -223,7 +252,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Development tooling: PHP_CodeSniffer (WPCS), PHPStan, PHPUnit (Brain Monkey),
   and a GitHub Actions CI workflow across PHP 8.2–8.4.
 
-[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.6.0...v0.7.0

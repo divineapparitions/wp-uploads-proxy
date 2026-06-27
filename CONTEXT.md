@@ -96,8 +96,16 @@ repeated Misses for a genuinely-absent file stop re-hitting the Origin.
 - State is counters-only (downloaded total + negative-cache size) for the
   diagnostics page — no per-file manifest. A `wp uploads-proxy` WP-CLI command
   exposes `status`/`clear-cache`, and an `X-Uploads-Proxy` response header marks
-  proxied responses. Uninstall clears options/transients but never deletes
-  downloaded media.
+  proxied responses.
+- Uninstall (issue #10) removes all of the plugin's persisted state — the
+  settings option, both counter options, and every Negative-cache transient — on
+  the current site and, on multisite, every site, but **never** deletes downloaded
+  media. The decision is a WordPress-free seam (`Uninstaller`, given `delete_option`
+  and the Negative-cache clear as injected collaborators) behind thin glue
+  (`uninstall.php`) that enforces the `WP_UNINSTALL_PLUGIN` guard, bootstraps the
+  autoloader, and iterates sites. The seam owns no filesystem collaborator, so the
+  "never delete media" guarantee is structural; the glue keeps a literal-key
+  fallback for a pruned `vendor/`.
 
 ## Tooling decisions
 
