@@ -291,6 +291,9 @@ final class DownloadHappyPathTest extends WP_UnitTestCase {
 			/** @var array<string, string> */
 			public array $served = [];
 
+			/** @var array{location: string}|array{} */
+			public array $servedHotlink = [];
+
 			/** @var array{xUploadsProxy: string}|array{} */
 			public array $served404 = [];
 
@@ -299,6 +302,10 @@ final class DownloadHappyPathTest extends WP_UnitTestCase {
 					'bytes'       => $bytes,
 					'contentType' => $contentType,
 				];
+			}
+
+			public function serveHotlink( string $location ): void {
+				$this->servedHotlink = [ 'location' => $location ];
 			}
 
 			public function serve404( string $xUploadsProxy ): void {

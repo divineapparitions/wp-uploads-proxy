@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-27
+
+### Added
+
+- Hotlink mode dispatch (issue #6): when `mode = hotlink`, a Miss issues a `302`
+  temporary redirect (never `301`) to the file on the configured Origin with an
+  `X-Uploads-Proxy: hotlink` header. Nothing is written locally, so every Miss
+  issues a fresh redirect — toggling modes or fixing the Origin is never poisoned
+  by permanent browser caching. Download mode remains the default.
+- `Responder::serveHotlink( string $location ): void` interface method;
+  `HttpResponder` implementation sets `http_response_code(302)`, emits the
+  `Location` and `X-Uploads-Proxy: hotlink` headers, then exits.
+- Unit tests (Brain Monkey) covering all Hotlink dispatch paths: redirect issued
+  to Origin URL, no file written locally, no outbound Origin fetch, and
+  confirmation that Download mode remains the default.
+- Integration test suite `HotlinkModeTest` (wp-env `tests-cli`) asserting the
+  redirect Location, that nothing is written locally, and that no outbound HTTP
+  request is made when Hotlink mode is active.
+
 ## [0.5.0] - 2026-06-27
 
 ### Added
@@ -119,7 +138,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Development tooling: PHP_CodeSniffer (WPCS), PHPStan, PHPUnit (Brain Monkey),
   and a GitHub Actions CI workflow across PHP 8.2–8.4.
 
-[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/philltran/wp-uploads-proxy/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/philltran/wp-uploads-proxy/compare/v0.2.0...v0.3.0

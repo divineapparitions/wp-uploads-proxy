@@ -29,6 +29,16 @@ final class HttpResponder implements Responder {
 		exit;
 	}
 
+	public function serveHotlink( string $location ): void {
+		if ( ! headers_sent() ) {
+			http_response_code( 302 );
+			header( 'Location: ' . $location );
+			header( 'X-Uploads-Proxy: hotlink' );
+		}
+
+		exit;
+	}
+
 	public function serve404( string $xUploadsProxy ): void {
 		if ( ! headers_sent() ) {
 			http_response_code( 404 );

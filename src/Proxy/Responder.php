@@ -22,6 +22,18 @@ interface Responder {
 	public function serveDownload( string $bytes, string $contentType ): void;
 
 	/**
+	 * Emit a Hotlink-mode response: a `302` temporary redirect to the Origin URL
+	 * with the `X-Uploads-Proxy: hotlink` marker.
+	 *
+	 * The status MUST be `302` (temporary) and NEVER `301` (permanent) so that
+	 * toggling modes or fixing the Origin is never poisoned by browser caches that
+	 * lock in a permanent redirect.
+	 *
+	 * Production implementations terminate the request after sending.
+	 */
+	public function serveHotlink( string $location ): void;
+
+	/**
 	 * Emit a 404 Not Found response.
 	 *
 	 * When `$xUploadsProxy` is non-empty it is emitted as the `X-Uploads-Proxy`

@@ -79,6 +79,18 @@ final class RequestHandlerTest extends TestCase {
 		);
 	}
 
+	private function hotlinkConfig(): EffectiveConfig {
+		return new EffectiveConfig(
+			'https://origin.test',
+			Source::Constant,
+			Mode::Hotlink,
+			Source::Constant,
+			null,
+			Source::DefaultOff,
+			false,
+		);
+	}
+
 	private function resolver( EffectiveConfig $config ): ConfigResolver {
 		return new class( $config ) implements ConfigResolver {
 			public function __construct( private EffectiveConfig $config ) {}
@@ -128,6 +140,9 @@ final class RequestHandlerTest extends TestCase {
 			/** @var array<string, string> */
 			public array $served = [];
 
+			/** @var array{location: string}|array{} */
+			public array $servedHotlink = [];
+
 			/** @var array{xUploadsProxy: string}|array{} */
 			public array $served404 = [];
 
@@ -136,6 +151,10 @@ final class RequestHandlerTest extends TestCase {
 					'bytes'       => $bytes,
 					'contentType' => $contentType,
 				];
+			}
+
+			public function serveHotlink( string $location ): void {
+				$this->servedHotlink = [ 'location' => $location ];
 			}
 
 			public function serve404( string $xUploadsProxy ): void {
@@ -513,6 +532,128 @@ final class RequestHandlerTest extends TestCase {
 	// -------------------------------------------------------------------------
 	// Miss-fallback: Negative-cache short-circuit
 	// -------------------------------------------------------------------------
+
+	// -------------------------------------------------------------------------
+	// Hotlink mode
+	// -------------------------------------------------------------------------
+
+	public function test_hotlink_mode_miss_issues_redirect_to_origin_url(): void {
+		$scope     = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		$responder = $this->capturingResponder();
+
+		$handler = new RequestHandler(
+			$this->resolver( $this->hotlinkConfig() ),
+			$this->originClient( new OriginResponse( 200, 'IGNORED', 'image/jpeg' ) ),
+			new FileWriter(),
+			new Counters(),
+			new NegativeCache(),
+			$responder,
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		$handled = $handler->handle( '/wp-content/uploads/2026/06/photo.jpg' );
+
+		self::assertTrue( $handled );
+		self::assertSame(
+			'https://origin.test/wp-content/uploads/2026/06/photo.jpg',
+			$responder->servedHotlink['location'] ?? null
+		);
+	}
+
+	public function test_hotlink_mode_miss_does_not_write_file_locally(): void {
+		$scope     = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		$responder = $this->capturingResponder();
+
+		$handler = new RequestHandler(
+			$this->resolver( $this->hotlinkConfig() ),
+			$this->originClient( new OriginResponse( 200, 'IGNORED', 'image/jpeg' ) ),
+			new FileWriter(),
+			new Counters(),
+			new NegativeCache(),
+			$responder,
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		$handler->handle( '/wp-content/uploads/2026/06/photo.jpg' );
+
+		self::assertFileDoesNotExist( $this->baseDir . '/2026/06/photo.jpg' );
+	}
+
+	public function test_hotlink_mode_does_not_fetch_from_origin(): void {
+		$scope                 = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		[ $fetcher, $counter ] = $this->countingOriginClient( new OriginResponse( 200, 'BYTES', 'image/jpeg' ) );
+
+		$handler = new RequestHandler(
+			$this->resolver( $this->hotlinkConfig() ),
+			$fetcher,
+			new FileWriter(),
+			new Counters(),
+			new NegativeCache(),
+			$this->capturingResponder(),
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		$handler->handle( '/wp-content/uploads/2026/06/photo.jpg' );
+
+		self::assertSame( 0, $counter->hits, 'Hotlink mode must not fetch from the Origin.' );
+	}
+
+	public function test_hotlink_mode_does_not_serve_download(): void {
+		$scope     = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		$responder = $this->capturingResponder();
+
+		$handler = new RequestHandler(
+			$this->resolver( $this->hotlinkConfig() ),
+			$this->originClient( new OriginResponse( 200, 'IGNORED', 'image/jpeg' ) ),
+			new FileWriter(),
+			new Counters(),
+			new NegativeCache(),
+			$responder,
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		$handler->handle( '/wp-content/uploads/2026/06/photo.jpg' );
+
+		self::assertEmpty( $responder->served, 'Hotlink mode must not call serveDownload.' );
+	}
+
+	public function test_download_mode_remains_default_and_is_not_hotlink(): void {
+		// Config() uses Mode::Download (the default). Assert that Download mode
+		// still calls serveDownload and never calls serveHotlink.
+		$scope     = new UploadsScope( $this->baseDir, '/wp-content/uploads' );
+		$responder = $this->capturingResponder();
+
+		$handler = new RequestHandler(
+			$this->resolver( $this->config() ),
+			$this->originClient( new OriginResponse( 200, 'IMAGE-BYTES', 'image/jpeg' ) ),
+			new FileWriter(),
+			new Counters(),
+			new NegativeCache(),
+			$responder,
+			static fn (): UploadsScope => $scope,
+			static fn (): string => 'local',
+		);
+
+		Functions\when( 'wp_check_filetype' )->justReturn(
+			[
+				'ext'  => 'jpg',
+				'type' => 'image/jpeg',
+			]
+		);
+		Functions\when( 'get_transient' )->justReturn( false );
+		Functions\when( 'get_option' )->justReturn( 0 );
+		Functions\expect( 'update_option' )->once();
+
+		$handled = $handler->handle( '/wp-content/uploads/2026/06/photo.jpg' );
+
+		self::assertTrue( $handled );
+		self::assertSame( 'IMAGE-BYTES', $responder->served['bytes'] ?? null );
+		self::assertEmpty( $responder->servedHotlink, 'Download mode must not call serveHotlink.' );
+	}
 
 	public function test_negative_cached_path_short_circuits_without_origin_fetch(): void {
 		$scope                 = new UploadsScope( $this->baseDir, '/wp-content/uploads' );

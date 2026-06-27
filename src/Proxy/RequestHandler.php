@@ -75,8 +75,9 @@ final class RequestHandler implements Registrable {
 
 	/**
 	 * Resolve a Miss for $requestUri. Returns true when the handler emitted a
-	 * response (download, negative-cache, or fallback 404), false when it stayed
-	 * inert (request not in scope, plugin off, file already present locally, etc.).
+	 * response (redirect, download, negative-cache, or fallback 404), false when
+	 * it stayed inert (request not in scope, plugin off, file already present
+	 * locally, etc.).
 	 *
 	 * Separated from {@see RequestHandler::onTemplateRedirect()} so it can be
 	 * driven directly with an explicit URI in tests.
@@ -89,8 +90,8 @@ final class RequestHandler implements Registrable {
 
 		$config = $this->resolver->resolve();
 
-		// Off until an Origin is configured; this slice handles Download mode only.
-		if ( ! $config->isEnabled() || Mode::Download !== $config->mode() ) {
+		// Off until an Origin is configured.
+		if ( ! $config->isEnabled() ) {
 			return false;
 		}
 
@@ -108,6 +109,18 @@ final class RequestHandler implements Registrable {
 		if ( is_file( $target ) ) {
 			return false;
 		}
+
+		// Hotlink mode: redirect the browser to the Origin URL. Nothing is written
+		// locally — the web server never caches a copy, so every Miss issues a fresh
+		// redirect. The status is 302 (temporary, never 301) so toggling modes or
+		// fixing the Origin is never poisoned by permanent browser caching.
+		if ( Mode::Hotlink === $config->mode() ) {
+			$originRequest = new OriginRequest( $config->origin(), $requestUri, $config->basicAuth() );
+			$this->responder->serveHotlink( $originRequest->url() );
+			return true;
+		}
+
+		// Download mode (default) from here on.
 
 		// Hard-deny executable extensions before any network call.
 		if ( ! $scope->isAllowedFile( $relativePath ) ) {
