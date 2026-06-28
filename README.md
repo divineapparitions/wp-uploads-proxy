@@ -33,7 +33,7 @@ A Miss resolves in one of two modes:
 ## Installation (from source)
 
 ```bash
-git clone git@github.com:philltran/wp-uploads-proxy.git uploads-proxy
+git clone git@github.com:divineapparitions/wp-uploads-proxy.git uploads-proxy
 cd uploads-proxy
 composer install --no-dev   # production dependencies only
 ```

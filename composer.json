@@ -11,16 +11,16 @@
 		"proxy",
 		"staging"
 	],
-	"homepage": "https://github.com/philltran/wp-uploads-proxy",
+	"homepage": "https://github.com/divineapparitions/wp-uploads-proxy",
 	"authors": [
 		{
 			"name": "Divine Apparitions",
-			"homepage": "https://github.com/philltran"
+			"homepage": "https://github.com/divineapparitions"
 		}
 	],
 	"support": {
-		"issues": "https://github.com/philltran/wp-uploads-proxy/issues",
-		"source": "https://github.com/philltran/wp-uploads-proxy"
+		"issues": "https://github.com/divineapparitions/wp-uploads-proxy/issues",
+		"source": "https://github.com/divineapparitions/wp-uploads-proxy"
 	},
 	"require": {
 		"php": ">=8.2"

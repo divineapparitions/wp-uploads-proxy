@@ -9,18 +9,18 @@
  *
  * @wordpress-plugin
  * Plugin Name:       Uploads Proxy
- * Plugin URI:        https://github.com/philltran/wp-uploads-proxy
+ * Plugin URI:        https://github.com/divineapparitions/wp-uploads-proxy
  * Description:       Proxy missing media to a production origin so staging and local environments don't need a full copy of the uploads directory.
  * Version:           0.10.0
  * Requires at least: 6.5
  * Requires PHP:      8.2
  * Author:            Divine Apparitions
- * Author URI:        https://github.com/philltran
+ * Author URI:        https://github.com/divineapparitions
  * Text Domain:       uploads-proxy
  * Domain Path:       /languages
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Update URI:        https://github.com/philltran/wp-uploads-proxy
+ * Update URI:        https://github.com/divineapparitions/wp-uploads-proxy
  */
 
 declare(strict_types=1);
