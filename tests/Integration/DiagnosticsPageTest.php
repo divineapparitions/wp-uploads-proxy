@@ -23,8 +23,8 @@ use WP_UnitTestCase;
  *
  * Boots WordPress and exercises three real code paths: the "Test Origin
  * connection" probe through the live HTTP layer (mocked with `pre_http_request`,
- * graded 2xx-only per Fork A), the write-only password preservation through real
- * `get_option`/`update_option` (Fork B), and the page render — asserting the
+ * graded 2xx-only), the write-only password preservation through real
+ * `get_option`/`update_option`, and the page render — asserting the
  * status panel masks the password and never emits the stored bytes into the DOM.
  *
  * AUTHORED-ONLY: this machine cannot mount the plugin path into the wp-env Docker
@@ -94,7 +94,7 @@ final class DiagnosticsPageTest extends WP_UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
-	// Test Origin probe (Fork A): only 2xx is reachable.
+	// Test Origin probe: only 2xx is reachable.
 	// -------------------------------------------------------------------------
 
 	public function test_probe_reports_reachable_on_2xx(): void {
@@ -163,7 +163,7 @@ final class DiagnosticsPageTest extends WP_UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
-	// Write-only password (Fork B) against real options.
+	// Write-only password against real options.
 	// -------------------------------------------------------------------------
 
 	public function test_empty_password_submit_preserves_the_stored_password(): void {

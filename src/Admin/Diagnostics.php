@@ -75,7 +75,7 @@ final class Diagnostics {
 	 * The effective Basic Auth username, or '' when none is configured.
 	 *
 	 * Exposed so the page can show the username (read-only when constant/env
-	 * sourced) without ever revealing the password (issue #7, Fork B).
+	 * sourced) without ever revealing the password (issue #7).
 	 */
 	public function basicAuthUsername(): string {
 		return $this->config->basicAuth()?->username() ?? '';

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DivineApparitions\UploadsProxy\Admin;
 
 /**
- * The outcome of a "Test Origin connection" probe (issue #7, Fork A).
+ * The outcome of a "Test Origin connection" probe (issue #7).
  *
  * Reachability is graded strictly: only a 2xx status counts as reachable, so a
  * 4xx, a 5xx, and a transport error (the normalised status 0) are all treated as

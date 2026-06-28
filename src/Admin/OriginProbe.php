@@ -13,7 +13,7 @@ use DivineApparitions\UploadsProxy\Proxy\OriginRequest;
  *
  * Probes the Origin root (`GET {origin}/`) with any configured Basic Auth
  * attached, reusing the existing {@see OriginRequest} + {@see OriginFetcher} seam
- * so it never hand-rolls an HTTP call (issue #7, Fork A). Grading the response is
+ * so it never hand-rolls an HTTP call (issue #7). Grading the response is
  * delegated to {@see ProbeResult}: only a 2xx is reachable. Callers must ensure an
  * Origin is configured before probing.
  */

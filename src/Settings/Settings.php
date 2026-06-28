@@ -113,7 +113,7 @@ final class Settings {
 	 * The password is a write-only field: the page never renders the stored
 	 * password back into the form, so an empty submission means "keep what is
 	 * stored" rather than "blank it". Only a non-empty value overwrites the
-	 * stored password (issue #7, Fork B).
+	 * stored password (issue #7).
 	 *
 	 * @param mixed $input Raw submitted value.
 	 *

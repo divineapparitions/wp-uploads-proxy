@@ -144,7 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   labelled with their source (constant / env / DB, read from the resolver), the
   Origin Basic Auth state, and the downloaded-total and Negative-cache counters —
   replacing the scaffold's plain Settings-API form.
-- "Test Origin connection" button (Fork A): a `manage_options`-gated,
+- "Test Origin connection" button: a `manage_options`-gated,
   nonce-protected `admin_post` handler probes the Origin root (`GET {origin}/`,
   Basic Auth attached) through the existing `OriginRequest`/`OriginClient` seam and
   grades the result **2xx-only as reachable** — every 4xx, 5xx, and transport
@@ -161,7 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   no constant/env var overrides it; an overridden field is shown read-only with its
   source. Overridden fields round-trip their stored DB value through hidden inputs
   so saving never wipes a shadowed value.
-- Basic Auth password is now **write-only** (Fork B): the real bytes are never
+- Basic Auth password is now **write-only**: the real bytes are never
   rendered into the DOM — the status panel shows a fixed mask (`••••••••`) when a
   password is stored and "Not set" otherwise, and the editor offers an empty field
   that only overwrites the stored password when filled in. `Settings::sanitize()`

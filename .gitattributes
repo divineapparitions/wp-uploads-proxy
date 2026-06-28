@@ -1,8 +1,12 @@
 # Normalise line endings.
 * text=auto eol=lf
 
-# Files excluded from `composer archive` / distribution builds. Everything
-# below is development tooling that should not ship inside the plugin zip.
+# `export-ignore` keeps development tooling out of `git archive` (and
+# `composer archive`, which wraps it). NOTE: this is NOT how the shippable
+# plugin is built — the WordPress.org zip comes from `.distignore` after
+# `composer install --no-dev`. `composer archive` would omit the gitignored
+# vendor/ autoloader and produce a broken plugin, so do not use it to package
+# a release. Keep this list roughly in sync with `.distignore`.
 /.github          export-ignore
 /tests            export-ignore
 /.editorconfig    export-ignore
@@ -13,5 +17,13 @@
 /phpcs.xml.dist   export-ignore
 /phpstan.neon.dist export-ignore
 /phpunit.xml.dist export-ignore
+/phpunit-integration.xml.dist export-ignore
+/package.json     export-ignore
+/package-lock.json export-ignore
+/.wp-env.json     export-ignore
+/docs             export-ignore
+/CONTEXT.md       export-ignore
+/CONTRIBUTING.md  export-ignore
+/CLA.md           export-ignore
 /CHANGELOG.md     export-ignore
 /README.md        export-ignore

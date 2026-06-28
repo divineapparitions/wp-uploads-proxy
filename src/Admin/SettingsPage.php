@@ -24,7 +24,7 @@ use DivineApparitions\UploadsProxy\State\Counters;
  * status panel. The Basic Auth password is write-only: it is never rendered into
  * the DOM — the status panel shows a fixed mask when one is stored, and the editor
  * offers an empty field that only overwrites the stored password when filled in
- * (issue #7, Fork B).
+ * (issue #7).
  *
  * Decision logic lives in the WordPress-free {@see Diagnostics}, {@see OriginProbe},
  * and {@see ProbeResult}; this class only renders and escapes their output.
@@ -42,7 +42,7 @@ final class SettingsPage implements Registrable {
 
 	/**
 	 * Fixed mask shown for a stored Basic Auth password — never the real bytes,
-	 * never its length (issue #7, Fork B).
+	 * never its length (issue #7).
 	 */
 	private const PASSWORD_MASK = '••••••••';
 
@@ -84,7 +84,7 @@ final class SettingsPage implements Registrable {
 
 	/**
 	 * Handle the "Test Origin connection" POST: probe the Origin and redirect
-	 * back with the result encoded as a status code (issue #7, Fork A).
+	 * back with the result encoded as a status code (issue #7).
 	 *
 	 * Capability-gated and nonce-protected so it cannot be triggered via CSRF.
 	 */
@@ -232,7 +232,7 @@ final class SettingsPage implements Registrable {
 	/**
 	 * The Basic Auth summary for the status panel: username + a fixed password
 	 * mask when set, or "Not set". Returns escaped, display-ready markup and never
-	 * the real password (issue #7, Fork B).
+	 * the real password (issue #7).
 	 */
 	private function basicAuthSummary( Diagnostics $diagnostics ): string {
 		if ( ! $diagnostics->hasBasicAuth() ) {
@@ -398,7 +398,7 @@ final class SettingsPage implements Registrable {
 	/**
 	 * The Basic Auth row. The username is editable; the password is write-only —
 	 * the field is always empty and only a non-empty submission replaces the
-	 * stored password, so the real value never reaches the DOM (issue #7, Fork B).
+	 * stored password, so the real value never reaches the DOM (issue #7).
 	 */
 	private function renderBasicAuthRow( Diagnostics $diagnostics ): void {
 		if ( ! $diagnostics->isBasicAuthEditable() ) {

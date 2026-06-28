@@ -23,7 +23,7 @@ final class SettingsTest extends TestCase {
 		Functions\when( 'sanitize_text_field' )->returnArg();
 
 		// sanitize() now reads the stored password to preserve it on an empty
-		// submit (write-only field, Fork B), so the DB-read seam must be stubbed.
+		// submit (write-only field), so the DB-read seam must be stubbed.
 		// Default: nothing stored. Individual tests override get_option.
 		Functions\when( 'get_option' )->justReturn( [] );
 		Functions\when( 'wp_parse_args' )->alias(
@@ -65,7 +65,7 @@ final class SettingsTest extends TestCase {
 	}
 
 	public function test_sanitize_preserves_stored_password_on_empty_submit(): void {
-		// The password field is write-only (Fork B): an empty submission must keep
+		// The password field is write-only: an empty submission must keep
 		// the stored password rather than blanking it.
 		Functions\when( 'get_option' )->justReturn( [ 'basic_auth_pass' => 'stored-secret' ] );
 

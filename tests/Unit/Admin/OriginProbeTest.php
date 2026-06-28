@@ -15,7 +15,7 @@ use DivineApparitions\UploadsProxy\Proxy\OriginResponse;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The "Test Origin connection" probe (issue #7, Fork A).
+ * The "Test Origin connection" probe (issue #7).
  *
  * Reachability is graded strictly: only a 2xx status counts as reachable; every
  * 4xx, 5xx, and a transport error (status 0) is unreachable, but the actual code

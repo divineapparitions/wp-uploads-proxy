@@ -1,0 +1,43 @@
+# .distignore — files excluded from the WordPress.org plugin build.
+#
+# Consumed by the WordPress.org deploy step (e.g.
+# 10up/action-wordpress-plugin-deploy). Everything listed here stays in the
+# Git repo but is NOT shipped to users in the installed plugin.
+#
+# IMPORTANT: vendor/ is intentionally NOT excluded. This plugin loads
+# vendor/autoload.php at runtime (see uploads-proxy.php), so the build must run
+# `composer install --no-dev --optimize-autoloader` first and ship the resulting
+# vendor/ directory. node_modules/ is dev-only and is excluded below.
+
+# Version control / CI
+/.git
+/.gitattributes
+/.gitignore
+/.distignore
+/.github
+
+# Local dev environment
+/.editorconfig
+/.wp-env.json
+/node_modules
+
+# Tests
+/tests
+/phpunit.xml.dist
+/phpunit-integration.xml.dist
+
+# Tooling config
+/composer.json
+/composer.lock
+/package.json
+/package-lock.json
+/phpcs.xml.dist
+/phpstan.neon.dist
+
+# Project docs not needed inside the installed plugin
+/docs
+/CONTEXT.md
+/CONTRIBUTING.md
+/CLA.md
+/CHANGELOG.md
+/README.md
