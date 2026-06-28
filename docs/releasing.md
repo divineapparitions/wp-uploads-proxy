@@ -50,6 +50,19 @@ Apparitions org). Releases are cut from `master`.
 
 ## WordPress.org (when publishing there)
 
+**Plugin slug: `uploads-proxy`** (not `wp-uploads-proxy`). The slug is the
+installed folder name and the `.org` permalink (`wordpress.org/plugins/uploads-proxy/`),
+and WordPress.org requires it to equal the plugin **Text Domain** — which is
+`uploads-proxy` throughout the code. The GitHub repo is named `wp-uploads-proxy`;
+the `.org` slug deliberately differs and that is fine.
+
+> Gotcha: `10up/action-wordpress-plugin-deploy` defaults its `slug` to the GitHub
+> repository name (`wp-uploads-proxy`). Set `slug: uploads-proxy` explicitly in the
+> deploy workflow, and install/extract the plugin into a folder named
+> `uploads-proxy/` when validating with Plugin Check — otherwise Plugin Check derives
+> the expected text domain from the folder name and reports a spurious
+> `WordPress.WP.I18n.TextDomainMismatch` for every translatable string.
+
 The `.org` plugin directory is SVN-based, separate from Git. Recommended
 automation:
 

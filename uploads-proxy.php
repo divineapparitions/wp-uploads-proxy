@@ -17,10 +17,8 @@
  * Author:            Divine Apparitions
  * Author URI:        https://github.com/divineapparitions
  * Text Domain:       uploads-proxy
- * Domain Path:       /languages
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Update URI:        https://github.com/divineapparitions/wp-uploads-proxy
  */
 
 declare(strict_types=1);
@@ -99,6 +97,6 @@ register_deactivation_hook( __FILE__, [ Plugin::class, 'deactivate' ] );
 add_action(
 	'plugins_loaded',
 	static function (): void {
-		( new Plugin( __FILE__, VERSION ) )->register();
+		( new Plugin( VERSION ) )->register();
 	}
 );

@@ -44,11 +44,9 @@ final class Plugin {
 	private readonly CommandRunner $commandRunner;
 
 	/**
-	 * @param string $file    Absolute path to the main plugin file.
 	 * @param string $version Plugin version.
 	 */
 	public function __construct(
-		private readonly string $file,
 		private readonly string $version,
 	) {
 		$settings      = new Settings();
@@ -87,8 +85,6 @@ final class Plugin {
 	 * Register all hooks for the plugin and its components.
 	 */
 	public function register(): void {
-		add_action( 'init', [ $this, 'loadTextDomain' ] );
-
 		foreach ( $this->components as $component ) {
 			$component->register();
 		}
@@ -96,17 +92,6 @@ final class Plugin {
 		// Register the WP-CLI command only when WP-CLI is the runtime, so it is
 		// inert during a normal web request (issue #8).
 		Command::register( $this->commandRunner );
-	}
-
-	/**
-	 * Load translations on `init` (WordPress 6.7+ warns if done earlier).
-	 */
-	public function loadTextDomain(): void {
-		load_plugin_textdomain(
-			'uploads-proxy',
-			false,
-			dirname( plugin_basename( $this->file ) ) . '/languages'
-		);
 	}
 
 	/**

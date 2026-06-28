@@ -69,6 +69,7 @@ final class NegativeCache implements NegativeStore {
 	public function clearAll(): int {
 		global $wpdb;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- No WP API enumerates transients by key pattern; the prepared LIKE query is read once and each row is immediately cleared via delete_transient() (see method docblock).
 		$option_names = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",

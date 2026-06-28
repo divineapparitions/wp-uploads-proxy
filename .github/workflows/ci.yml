@@ -43,3 +43,37 @@ jobs:
 
       - name: Unit tests (PHPUnit)
         run: composer run-script test
+
+  plugin-check:
+    name: WordPress Plugin Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write   # let the action post findings as a PR comment
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Check the EXACT package that ships to WordPress.org, not the raw source
+      # tree. `git archive` honours the `export-ignore` attributes in
+      # .gitattributes (kept in sync with .distignore), so dev-only files —
+      # vendor/, node_modules/, tests/, .editorconfig, composer/PHPCS/PHPStan
+      # config — are stripped and never reach the checker. The --prefix names the
+      # folder `uploads-proxy`: this is the WordPress.org slug, which MUST equal
+      # the plugin Text Domain (`uploads-proxy`). See docs/releasing.md.
+      - name: Build the shippable package
+        run: |
+          mkdir -p build
+          git archive --format=tar --prefix=uploads-proxy/ HEAD | tar -x -C build
+
+      # Runs the same checks as the Plugin Check admin screen (incl.
+      # WordPress.WP.I18n.TextDomainMismatch, readme, headers, security).
+      # `slug` is set explicitly because the action otherwise defaults it to the
+      # GitHub repo name (`wp-uploads-proxy`), which would re-introduce the
+      # text-domain mismatch. Errors fail the build; warnings are reported but
+      # non-fatal (add `strict: true` to also fail on warnings).
+      - name: Run WordPress Plugin Check
+        uses: WordPress/plugin-check-action@v1
+        with:
+          build-dir: ./build/uploads-proxy
+          slug: uploads-proxy

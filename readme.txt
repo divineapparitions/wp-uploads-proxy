@@ -2,7 +2,7 @@
 Contributors: philltran
 Tags: media, uploads, proxy, staging, development
 Requires at least: 6.5
-Tested up to: 6.8
+Tested up to: 7.0
 Requires PHP: 8.2
 Stable tag: 0.10.0
 License: GPLv2 or later

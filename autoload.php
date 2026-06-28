@@ -13,18 +13,23 @@
 
 declare(strict_types=1);
 
+// Prevent direct access.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 spl_autoload_register(
-	static function ( string $class ): void {
+	static function ( string $className ): void {
 		$prefix = 'DivineApparitions\\UploadsProxy\\';
 		$length = strlen( $prefix );
 
 		// Bail fast on classes outside this plugin's namespace, leaving them for
 		// the next registered autoloader (e.g. Composer's, when running tests).
-		if ( 0 !== strncmp( $prefix, $class, $length ) ) {
+		if ( 0 !== strncmp( $prefix, $className, $length ) ) {
 			return;
 		}
 
-		$relative = substr( $class, $length );
+		$relative = substr( $className, $length );
 		$file     = __DIR__ . '/src/' . str_replace( '\\', '/', $relative ) . '.php';
 
 		if ( is_readable( $file ) ) {
