@@ -28,51 +28,25 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-$uploads_proxy_autoload = __DIR__ . '/vendor/autoload.php';
-
-if ( is_readable( $uploads_proxy_autoload ) ) {
-	require_once $uploads_proxy_autoload;
-}
+require_once __DIR__ . '/autoload.php';
 
 /**
  * Purge the plugin's persisted state on the current site.
  *
- * Prefers the {@see Uninstaller} seam (so the option keys and the transient
- * clear stay in one canonical place). If the Composer autoloader is unavailable
- * — uninstall.php must stay robust even when `vendor/` has been pruned — it
- * falls back to the literal option names and a self-contained transient delete,
- * mirroring {@see NegativeCache::clearAll}. Neither path touches the uploads
- * directory.
+ * Delegates to the {@see Uninstaller} seam so the option keys and the
+ * Negative-cache clear stay in one canonical place. The seam owns no filesystem
+ * collaborator, so it never touches the uploads directory.
  */
 if ( ! function_exists( 'uploads_proxy_purge_site_state' ) ) {
 	function uploads_proxy_purge_site_state(): void {
-		if ( class_exists( Uninstaller::class ) && class_exists( NegativeCache::class ) ) {
-			$negative_cache = new NegativeCache();
+		$negative_cache = new NegativeCache();
 
-			( new Uninstaller(
-				static function ( string $name ): void {
-					delete_option( $name );
-				},
-				static fn (): int => $negative_cache->clearAll(),
-			) )->purge();
-
-			return;
-		}
-
-		// Self-contained fallback when vendor/ is missing: literal option/transient keys.
-		delete_option( 'uploads_proxy_settings' );
-		delete_option( 'uploads_proxy_downloaded_count' );
-		delete_option( 'uploads_proxy_negative_count' );
-
-		global $wpdb;
-
-		$wpdb->query(
-			$wpdb->prepare(
-				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-				$wpdb->esc_like( '_transient_uploads_proxy_neg_' ) . '%',
-				$wpdb->esc_like( '_transient_timeout_uploads_proxy_neg_' ) . '%'
-			)
-		);
+		( new Uninstaller(
+			static function ( string $name ): void {
+				delete_option( $name );
+			},
+			static fn (): int => $negative_cache->clearAll(),
+		) )->purge();
 	}
 }
 

@@ -104,8 +104,7 @@ repeated Misses for a genuinely-absent file stop re-hitting the Origin.
   and the Negative-cache clear as injected collaborators) behind thin glue
   (`uninstall.php`) that enforces the `WP_UNINSTALL_PLUGIN` guard, bootstraps the
   autoloader, and iterates sites. The seam owns no filesystem collaborator, so the
-  "never delete media" guarantee is structural; the glue keeps a literal-key
-  fallback for a pruned `vendor/`.
+  "never delete media" guarantee is structural.
 
 ## Tooling decisions
 
@@ -124,6 +123,13 @@ repeated Misses for a genuinely-absent file stop re-hitting the Origin.
   the sniffs that fight that style (short-array/short-ternary prohibition,
   snake_case variable/method names, hyphenated `class-*.php` filenames) and does
   not reference WordPress-Docs.
+- **Runtime autoloading is self-contained, not Composer's.** The plugin has no
+  runtime Composer dependencies, so `uploads-proxy.php` and `uninstall.php` load
+  the `DivineApparitions\UploadsProxy\` namespace from `src/` through a hand-rolled
+  PSR-4 `spl_autoload_register` (`autoload.php`), not `vendor/autoload.php`. The
+  plugin therefore runs from a plain zip with no build step and ships no `vendor/`.
+  Composer stays the dev-tooling manager (PHPUnit, PHPStan, PHP_CodeSniffer); the
+  test bootstraps still load `src/` via Composer's dev autoloader.
 
 ## Flagged ambiguities
 

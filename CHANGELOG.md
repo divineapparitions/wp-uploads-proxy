@@ -28,6 +28,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   lives in a WordPress-free `EnvironmentNotice` seam (unit-tested) with a thin
   `EnvironmentNoticeRenderer`, mirroring the existing permalink notice.
 
+### Changed
+
+- The plugin no longer requires Composer or a bundled `vendor/` to run. Its own
+  classes load through a self-contained PSR-4 autoloader (`autoload.php`) instead
+  of Composer's generated `vendor/autoload.php`, so Uploads Proxy works from a
+  plain plugin zip with no build step. Composer is now development tooling only
+  (PHPUnit, PHPStan, PHP_CodeSniffer), and `uninstall.php` loads the same
+  autoloader — its `vendor/`-pruned fallback path was removed.
+
 ### Fixed
 
 - A Download-mode Miss is now served with HTTP `200` instead of `404`. The

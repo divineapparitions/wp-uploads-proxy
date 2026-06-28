@@ -1,12 +1,11 @@
 # Normalise line endings.
 * text=auto eol=lf
 
-# `export-ignore` keeps development tooling out of `git archive` (and
-# `composer archive`, which wraps it). NOTE: this is NOT how the shippable
-# plugin is built — the WordPress.org zip comes from `.distignore` after
-# `composer install --no-dev`. `composer archive` would omit the gitignored
-# vendor/ autoloader and produce a broken plugin, so do not use it to package
-# a release. Keep this list roughly in sync with `.distignore`.
+# `export-ignore` keeps development tooling out of `git archive` / `composer
+# archive` output. This plugin has no runtime Composer dependencies (it loads
+# its own classes via autoload.php), so an archive produced this way is a
+# working, installable plugin. The WordPress.org build instead uses `.distignore`
+# — keep the two lists roughly in sync.
 /.github          export-ignore
 /tests            export-ignore
 /.editorconfig    export-ignore

@@ -87,17 +87,9 @@ if ( version_compare( get_bloginfo( 'version' ), MINIMUM_WP_VERSION, '<' ) ) {
 	return;
 }
 
-// Load the Composer autoloader (vendor/ is not committed; run `composer install`).
-$uploads_proxy_autoloader = __DIR__ . '/vendor/autoload.php';
-
-if ( ! is_readable( $uploads_proxy_autoloader ) ) {
-	bootstrap_failure(
-		__( 'is missing its Composer dependencies. Run `composer install` in the plugin directory.', 'uploads-proxy' )
-	);
-	return;
-}
-
-require_once $uploads_proxy_autoloader;
+// Register the plugin's PSR-4 autoloader. There are no runtime Composer
+// dependencies, so loading is self-contained and needs no `vendor/`.
+require_once __DIR__ . '/autoload.php';
 
 // Activation / deactivation lifecycle.
 register_activation_hook( __FILE__, [ Plugin::class, 'activate' ] );
