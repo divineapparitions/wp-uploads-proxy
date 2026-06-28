@@ -130,6 +130,11 @@ repeated Misses for a genuinely-absent file stop re-hitting the Origin.
   plugin therefore runs from a plain zip with no build step and ships no `vendor/`.
   Composer stays the dev-tooling manager (PHPUnit, PHPStan, PHP_CodeSniffer); the
   test bootstraps still load `src/` via Composer's dev autoloader.
+- **Distribution is a plain zip with no build step.** The shipped package is
+  `src/` + `autoload.php` + the main/uninstall files + `readme.txt`/`LICENSE`;
+  `vendor/`, `tests/`, `docs/`, and dev config never ship (excluded by
+  `.distignore` and `.gitattributes` `export-ignore`). The full build and
+  WordPress.org publish process lives in `docs/releasing.md`.
 
 ## Flagged ambiguities
 
