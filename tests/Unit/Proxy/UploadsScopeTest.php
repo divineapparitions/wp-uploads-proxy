@@ -57,6 +57,36 @@ final class UploadsScopeTest extends TestCase {
 		);
 	}
 
+	public function test_relative_path_decodes_percent_encoding(): void {
+		// A filename with a space arrives percent-encoded; it must decode to the real
+		// name so the local lookup/write matches what the web server serves.
+		self::assertSame(
+			'2026/06/my photo.jpg',
+			$this->scope()->relativePathFor( '/wp-content/uploads/2026/06/my%20photo.jpg' )
+		);
+	}
+
+	public function test_relative_path_decodes_non_ascii(): void {
+		self::assertSame(
+			'2026/06/café.png',
+			$this->scope()->relativePathFor( '/wp-content/uploads/2026/06/caf%C3%A9.png' )
+		);
+	}
+
+	public function test_rejects_encoded_path_traversal(): void {
+		// Decoding happens before the traversal check, so an encoded "../" cannot
+		// slip past it.
+		self::assertNull(
+			$this->scope()->relativePathFor( '/wp-content/uploads/%2e%2e/%2e%2e/wp-config.php' )
+		);
+	}
+
+	public function test_rejects_an_encoded_null_byte(): void {
+		self::assertNull(
+			$this->scope()->relativePathFor( '/wp-content/uploads/evil%00.jpg' )
+		);
+	}
+
 	public function test_returns_null_for_a_request_outside_uploads(): void {
 		self::assertNull(
 			$this->scope()->relativePathFor( '/wp-content/themes/foo/style.css' )
@@ -119,6 +149,32 @@ final class UploadsScopeTest extends TestCase {
 		);
 
 		self::assertFalse( $this->scope()->isAllowedFile( '2026/06/malware.bat' ) );
+	}
+
+	public function test_filter_can_allow_a_type_wordpress_disallows(): void {
+		// SVG is not in the front-end allowed-MIME list, so wp_check_filetype reports
+		// type=false. The uploads_proxy_is_allowed_file filter lets a site proxy it.
+		Functions\when( 'wp_check_filetype' )->justReturn(
+			[
+				'ext'  => false,
+				'type' => false,
+			]
+		);
+		Functions\when( 'apply_filters' )->alias(
+			static fn ( string $hook, $value ) =>
+				'uploads_proxy_is_allowed_file' === $hook ? true : $value
+		);
+
+		self::assertTrue( $this->scope()->isAllowedFile( '2026/06/logo.svg' ) );
+	}
+
+	public function test_filter_cannot_re_enable_an_executable(): void {
+		// Even a filter that allows everything must not resurrect an executable: the
+		// hard deny (Layer 1) short-circuits before the filter is ever consulted.
+		Functions\when( 'apply_filters' )->justReturn( true );
+
+		self::assertFalse( $this->scope()->isAllowedFile( '2026/06/shell.php' ) );
+		self::assertFalse( $this->scope()->isAllowedFile( '2026/06/shell.phtml' ) );
 	}
 
 	public function test_absolute_path_input_to_absolute_path_for_is_contained_to_basedir(): void {

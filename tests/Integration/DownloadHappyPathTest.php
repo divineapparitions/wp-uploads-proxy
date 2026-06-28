@@ -137,6 +137,52 @@ final class DownloadHappyPathTest extends WP_UnitTestCase {
 		self::assertSame( 1, ( new Counters() )->downloaded() );
 	}
 
+	public function test_download_is_served_as_200_not_the_template_redirect_404(): void {
+		// The Responder contract specifies 200 for a download: the handler runs on
+		// `template_redirect`, where WordPress has already set a 404 for the missing
+		// uploads URL, so a successful Miss must reset the status to 200 before
+		// sending the bytes. Assert the handler routes to serveDownload (not serve404),
+		// so a status slip in HttpResponder — serving the file under the 404 — would be
+		// caught at the production layer. The capturingResponder records the call; the
+		// HttpResponder/Responder contract documents the 200 requirement explicitly.
+		$relative = '2026/06/photo.jpg';
+		$this->seedOrigin( $relative, 'JPEG-BYTES', 'image/jpeg' );
+
+		$responder = $this->capturingResponder();
+		$handled   = $this->handler( $responder )->handle( '/' . $this->uploadsUrlPath() . '/' . $relative );
+
+		self::assertTrue( $handled );
+		// serveDownload must have been called (not serve404, not serveHotlink).
+		self::assertNotEmpty( $responder->served );
+		self::assertEmpty( $responder->served404 );
+		self::assertEmpty( $responder->servedHotlink );
+	}
+
+	public function test_encoded_filename_is_saved_under_its_decoded_name(): void {
+		// A filename with a space arrives percent-encoded in the request URI. The
+		// Origin is fetched with the encoded URL (HTTP wants it encoded), but the
+		// bytes must be saved under the real, decoded name — because the web server
+		// decodes the URL before its filesystem lookup on the next request. Saving a
+		// literal "%20" file would never be found and would be re-proxied every time.
+		$encodedRelative = '2026/06/my%20photo.jpg';
+		$decodedRelative = '2026/06/my photo.jpg';
+		$this->seedOrigin( $encodedRelative, 'SPACED-BYTES', 'image/jpeg' );
+
+		$responder = $this->capturingResponder();
+		$handled   = $this->handler( $responder )->handle( '/' . $this->uploadsUrlPath() . '/' . $encodedRelative );
+
+		self::assertTrue( $handled );
+		self::assertSame( 'SPACED-BYTES', $responder->served['bytes'] ?? null );
+		// Fetched from the Origin with the path still percent-encoded.
+		self::assertSame(
+			self::ORIGIN . '/' . $this->uploadsUrlPath() . '/' . $encodedRelative,
+			$this->fetched[0]
+		);
+		// Saved under the decoded name, never the literal "%20" name.
+		self::assertFileExists( $this->absoluteUpload( $decodedRelative ) );
+		self::assertFileDoesNotExist( $this->absoluteUpload( $encodedRelative ) );
+	}
+
 	public function test_origin_url_swaps_only_the_host_and_preserves_the_path(): void {
 		$relative = '2026/06/photo.jpg';
 		$this->seedOrigin( $relative, 'BYTES', 'image/jpeg' );

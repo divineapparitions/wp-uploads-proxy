@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `uploads_proxy_is_allowed_file` filter: lets a site proxy a non-executable type
+  that WordPress's front-end allowed-MIME list omits — notably **SVG** (registered
+  only for logged-in uploaders by the *SVG Support* plugin), which was otherwise
+  silently 404'd in Download mode and appeared broken. Executable extensions are
+  hard-denied before the filter and can never be re-enabled through it. README
+  documents the SVG opt-in snippet.
+- `uploads_proxy_origin_timeout` filter: makes the outbound Origin request timeout
+  (default `15s`) adjustable, for an Origin with large media on a slow link where
+  the default could time out and leave the file un-proxied.
+- Production-environment admin notice: when the proxy is enabled but
+  `wp_get_environment_type()` reports `production` — where interception is
+  deliberately inert so the proxy never acts on the live Origin — the settings
+  screen now shows a warning explaining that nothing will happen and to set
+  `WP_ENVIRONMENT_TYPE` to `local`, `development`, or `staging`. A default DDEV /
+  Lando / vanilla WordPress install reports `production` unless that is set, so
+  the proxy could previously appear silently inert with no feedback. The decision
+  lives in a WordPress-free `EnvironmentNotice` seam (unit-tested) with a thin
+  `EnvironmentNoticeRenderer`, mirroring the existing permalink notice.
+
+### Fixed
+
+- A Download-mode Miss is now served with HTTP `200` instead of `404`. The
+  handler runs on `template_redirect`, where WordPress has already set a `404`
+  for the missing-uploads URL; `HttpResponder::serveDownload()` did not reset the
+  status, so the first proxied response carried a `404` alongside the file bytes —
+  which strict browsers, CDNs, and caches treat as a failure. It self-healed on
+  the second request (the web server served the now-on-disk file as `200`), which
+  masked the bug.
+- A Hotlink-mode Miss now returns a real `302` redirect on hosts whose page-cache
+  layer re-asserts the status late in the request — notably **Pantheon Advanced
+  Page Cache**. `HttpResponder` set the status with the raw `http_response_code()`,
+  which is invisible to a cache layer that tracks the response through WordPress's
+  `status_header` pipeline; that layer re-applied the `template_redirect` `404`,
+  leaving a `404` carrying a `Location` header (the redirect was ignored). All
+  three responder paths (`serveDownload` `200`, `serveHotlink` `302`, `serve404`
+  `404`) now emit the status through `status_header()` so it survives such hosts.
+  The `Responder` contract documents the requirement.
+- Percent-encoded request paths are now decoded before the local-path lookup, so a
+  Miss for a filename with a space or other encoded character (`my%20photo.jpg`) is
+  saved under its real, decoded name. Previously it was written under the literal
+  `%20` name, which the web server's decoded filesystem lookup never matched — so
+  the file was re-proxied on every request and a junk copy accumulated. Decoding
+  happens before the null-byte and traversal checks, which also hardens the scope
+  against an encoded `../` or `%00`.
+
 ## [0.10.0] - 2026-06-27
 
 ### Added

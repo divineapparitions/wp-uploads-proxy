@@ -16,7 +16,7 @@ namespace DivineApparitions\UploadsProxy\Proxy;
 final class OriginClient implements OriginFetcher {
 
 	/**
-	 * Outbound request timeout, in seconds.
+	 * Default outbound request timeout, in seconds. Filterable per request.
 	 */
 	private const TIMEOUT = 15;
 
@@ -24,10 +24,23 @@ final class OriginClient implements OriginFetcher {
 	 * Fetch the file described by $request, normalising the result.
 	 */
 	public function fetch( OriginRequest $request ): OriginResponse {
+		/**
+		 * Filters the outbound Origin request timeout, in seconds.
+		 *
+		 * The whole response body is buffered in memory, so the default is kept
+		 * short (15s). Raise it for an Origin with large media (multi-MB files) on a
+		 * slow link, where the default can time out and leave the file un-proxied —
+		 * or prefer Hotlink mode for such sites to avoid buffering large files at all.
+		 *
+		 * @param int    $timeout The timeout in seconds.
+		 * @param string $url     The Origin URL being fetched.
+		 */
+		$timeout = (int) apply_filters( 'uploads_proxy_origin_timeout', self::TIMEOUT, $request->url() );
+
 		$response = wp_remote_get(
 			$request->url(),
 			[
-				'timeout'     => self::TIMEOUT,
+				'timeout'     => $timeout,
 				'redirection' => 5,
 				'headers'     => $request->headers(),
 			]

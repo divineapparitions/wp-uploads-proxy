@@ -145,7 +145,10 @@ final class HotlinkModeTest extends WP_UnitTestCase {
 		// would be caught at the production layer. At this integration layer we assert
 		// the handler routes to serveHotlink and that the production HttpResponder
 		// emits 302 — the capturingResponder records the call; the HttpResponder
-		// contract comment documents the 302 requirement explicitly.
+		// contract comment documents the 302 requirement explicitly. The 302 MUST be
+		// emitted via WordPress's status_header() (not raw http_response_code()): on a
+		// host cache layer that re-asserts the template_redirect 404 late in the
+		// request (e.g. Pantheon Advanced Page Cache) a raw status reverts to 404.
 		$relative  = '2026/06/photo.jpg';
 		$responder = $this->capturingResponder();
 		$handled   = $this->handler( $responder )->handle( '/' . $this->uploadsUrlPath() . '/' . $relative );

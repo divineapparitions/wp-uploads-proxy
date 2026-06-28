@@ -85,6 +85,33 @@ nginx (DDEV, Lando, Pantheon) always does this. On Apache it only happens with
 pretty permalinks enabled — the plugin shows an admin notice for this case. Enable
 pretty permalinks at **Settings → Permalinks**.
 
+### Filters
+
+| Filter | Default | Purpose |
+| --- | --- | --- |
+| `uploads_proxy_is_allowed_file` | WordPress's allowed-MIME list | Whether a non-executable Uploads file may be downloaded and saved (Download mode). |
+| `uploads_proxy_origin_timeout` | `15` (seconds) | Outbound Origin request timeout. |
+
+**SVG (and other front-end-disallowed types).** In Download mode a file is only
+saved if `wp_check_filetype()` recognises its extension. On a front-end request that
+list omits types that are only registered for logged-in uploaders — notably **SVG**
+(via the *SVG Support* plugin) — so SVGs are not proxied and appear broken. Opt them
+in (executable extensions can never be re-enabled this way):
+
+```php
+add_filter( 'uploads_proxy_is_allowed_file', function ( $allowed, $relativePath, $ext ) {
+    return 'svg' === $ext ? true : $allowed;
+}, 10, 3 );
+```
+
+Alternatively, switch to **Hotlink** mode, which redirects to the Origin and applies
+no write gate, so SVGs (and every other type) resolve without local copies.
+
+**Large media.** The whole Origin response is buffered in memory, so the timeout is
+a short 15s by default. For an Origin with large files (multi-MB) on a slow link,
+either raise it — `add_filter( 'uploads_proxy_origin_timeout', fn() => 60 );` — or
+prefer Hotlink mode to avoid downloading and buffering large files locally.
+
 ## WP-CLI
 
 ```bash

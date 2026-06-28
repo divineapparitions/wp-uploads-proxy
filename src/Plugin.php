@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DivineApparitions\UploadsProxy;
 
+use DivineApparitions\UploadsProxy\Admin\EnvironmentNotice;
+use DivineApparitions\UploadsProxy\Admin\EnvironmentNoticeRenderer;
 use DivineApparitions\UploadsProxy\Admin\OriginProbe;
 use DivineApparitions\UploadsProxy\Admin\PermalinkNotice;
 use DivineApparitions\UploadsProxy\Admin\PermalinkNoticeRenderer;
@@ -61,6 +63,11 @@ final class Plugin {
 			new PermalinkNoticeRenderer(
 				$resolver,
 				new PermalinkNotice(),
+				static fn (): string => wp_get_environment_type(),
+			),
+			new EnvironmentNoticeRenderer(
+				$resolver,
+				new EnvironmentNotice(),
 				static fn (): string => wp_get_environment_type(),
 			),
 			new RequestHandler(

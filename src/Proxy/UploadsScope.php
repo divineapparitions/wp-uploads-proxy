@@ -72,12 +72,19 @@ final class UploadsScope {
 	 * a null byte, or paths that try to traverse out of the uploads directory.
 	 */
 	public function relativePathFor( string $requestUri ): ?string {
-		if ( '' === $this->basePath || str_contains( $requestUri, "\0" ) ) {
+		if ( '' === $this->basePath ) {
 			return null;
 		}
 
-		// Drop any query string / fragment.
-		$path = (string) strtok( $requestUri, '?#' );
+		// Drop any query string / fragment, then percent-decode so the path matches
+		// the real Origin / on-disk filename (e.g. "%20" → space). Decode BEFORE the
+		// safety checks below, so an encoded null byte ("%00") or traversal segment
+		// ("%2e%2e") cannot slip past them.
+		$path = rawurldecode( (string) strtok( $requestUri, '?#' ) );
+
+		if ( str_contains( $path, "\0" ) ) {
+			return null;
+		}
 
 		$prefix = $this->basePath . '/';
 		if ( ! str_starts_with( $path, $prefix ) ) {
@@ -138,8 +145,23 @@ final class UploadsScope {
 
 		// Layer 2: gate against WordPress's allowed-MIME-type list. Only extensions
 		// that wp_check_filetype() maps to a known, non-false type are permitted.
-		$check = wp_check_filetype( basename( $relativePath ) );
+		$check   = wp_check_filetype( basename( $relativePath ) );
+		$allowed = false !== $check['type'];
 
-		return false !== $check['type'];
+		/**
+		 * Filters whether a non-executable Uploads file may be downloaded and saved.
+		 *
+		 * The default is WordPress's allowed-MIME-type list, which on a front-end
+		 * (anonymous) request omits types only registered for logged-in uploaders —
+		 * notably SVG via the "SVG Support" plugin — so those files are not proxied in
+		 * Download mode and appear broken. Return true to proxy such a type anyway
+		 * (e.g. SVG), or false to refuse one. Executable extensions are hard-denied
+		 * before this filter runs and can never be re-enabled through it.
+		 *
+		 * @param bool   $allowed      Whether the file is allowed by default.
+		 * @param string $relativePath The site-relative uploads path.
+		 * @param string $extension    The lower-cased file extension.
+		 */
+		return (bool) apply_filters( 'uploads_proxy_is_allowed_file', $allowed, $relativePath, $extension );
 	}
 }

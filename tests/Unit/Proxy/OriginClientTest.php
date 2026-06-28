@@ -75,6 +75,47 @@ final class OriginClientTest extends TestCase {
 		self::assertTrue( $response->isOk() );
 	}
 
+	public function test_uses_the_default_timeout(): void {
+		$captured = null;
+		Functions\expect( 'wp_remote_get' )->once()->andReturnUsing(
+			function ( string $url, array $args ) use ( &$captured ) {
+				$captured = $args['timeout'] ?? null;
+				return [
+					'response' => [ 'code' => 200 ],
+					'body'     => 'X',
+					'headers'  => [],
+				];
+			}
+		);
+
+		( new OriginClient() )->fetch( new OriginRequest( 'https://origin.test', '/wp-content/uploads/x.jpg', null ) );
+
+		self::assertSame( 15, $captured );
+	}
+
+	public function test_timeout_is_filterable(): void {
+		Functions\when( 'apply_filters' )->alias(
+			static fn ( string $hook, $value ) =>
+				'uploads_proxy_origin_timeout' === $hook ? 45 : $value
+		);
+
+		$captured = null;
+		Functions\expect( 'wp_remote_get' )->once()->andReturnUsing(
+			function ( string $url, array $args ) use ( &$captured ) {
+				$captured = $args['timeout'] ?? null;
+				return [
+					'response' => [ 'code' => 200 ],
+					'body'     => 'X',
+					'headers'  => [],
+				];
+			}
+		);
+
+		( new OriginClient() )->fetch( new OriginRequest( 'https://origin.test', '/wp-content/uploads/x.jpg', null ) );
+
+		self::assertSame( 45, $captured );
+	}
+
 	public function test_wp_error_is_reported_as_a_failed_response(): void {
 		Functions\when( 'is_wp_error' )->justReturn( true );
 		Functions\expect( 'wp_remote_get' )->once()->andReturn( 'WP_Error' );
