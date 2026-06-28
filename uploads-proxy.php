@@ -72,6 +72,21 @@ if ( version_compare( PHP_VERSION, MINIMUM_PHP_VERSION, '<' ) ) {
 	return;
 }
 
+// Guard against unsupported WordPress versions. The `Requires at least` header
+// blocks admin-driven activation, but a git/manual install on older WordPress
+// would otherwise boot unguarded.
+if ( version_compare( get_bloginfo( 'version' ), MINIMUM_WP_VERSION, '<' ) ) {
+	bootstrap_failure(
+		sprintf(
+			/* translators: 1: required WordPress version, 2: current WordPress version. */
+			__( 'requires WordPress %1$s or newer. You are running WordPress %2$s.', 'uploads-proxy' ),
+			MINIMUM_WP_VERSION,
+			get_bloginfo( 'version' )
+		)
+	);
+	return;
+}
+
 // Load the Composer autoloader (vendor/ is not committed; run `composer install`).
 $uploads_proxy_autoloader = __DIR__ . '/vendor/autoload.php';
 

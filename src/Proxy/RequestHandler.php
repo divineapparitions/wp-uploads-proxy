@@ -114,6 +114,11 @@ final class RequestHandler implements Registrable {
 		// locally — the web server never caches a copy, so every Miss issues a fresh
 		// redirect. The status is 302 (temporary, never 301) so toggling modes or
 		// fixing the Origin is never poisoned by permanent browser caching.
+		//
+		// The executable-extension / MIME write gate below deliberately does NOT
+		// apply here: it exists to keep dangerous bytes off the local disk, and
+		// Hotlink writes nothing. The browser fetches straight from the Origin,
+		// which serves (or refuses) the file under its own rules.
 		if ( Mode::Hotlink === $config->mode() ) {
 			$originRequest = new OriginRequest( $config->origin(), $requestUri, $config->basicAuth() );
 			$this->responder->serveHotlink( $originRequest->url() );
@@ -134,6 +139,12 @@ final class RequestHandler implements Registrable {
 			return true;
 		}
 
+		// Known limitation: the Origin response body is buffered whole in memory
+		// (WordPress's HTTP layer has no streaming-to-disk fetch), held while it is
+		// written and then echoed. A very large Miss (e.g. an uncompressed video)
+		// can therefore press on PHP's memory_limit. Acceptable for the dev/staging
+		// use case this plugin targets; switch such an environment to Hotlink mode
+		// to avoid buffering large files locally.
 		$response = $this->originClient->fetch(
 			new OriginRequest( $config->origin(), $requestUri, $config->basicAuth() )
 		);

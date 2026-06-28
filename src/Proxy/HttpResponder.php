@@ -21,6 +21,11 @@ final class HttpResponder implements Responder {
 				header( 'Content-Type: ' . $contentType );
 			}
 
+			// The Content-Type is the Origin's verbatim. Tell the browser not to
+			// MIME-sniff a different type out of the bytes — defence in depth on top
+			// of the executable-extension / allowed-MIME write gate in UploadsScope.
+			header( 'X-Content-Type-Options: nosniff' );
+
 			header( 'Content-Length: ' . strlen( $bytes ) );
 		}
 
