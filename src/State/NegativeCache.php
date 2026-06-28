@@ -52,27 +52,41 @@ final class NegativeCache implements NegativeStore {
 	/**
 	 * Clear every Negative-cache entry, returning the number of entries removed.
 	 *
-	 * The plugin keeps no manifest of which paths have been cached, so individual
-	 * keys cannot be replayed through `delete_transient`. Instead the whole
-	 * `uploads_proxy_neg_*` transient family is removed in one query: both the
-	 * `_transient_` value rows and their `_transient_timeout_` siblings. This only
-	 * deletes the short-lived transients — it never touches downloaded media on
-	 * disk. Returns the number of entries cleared (each entry owns two option rows).
+	 * The plugin keeps no manifest of which paths have been cached, so the cached
+	 * keys are discovered by querying the options table for the `_transient_`
+	 * value rows of the `uploads_proxy_neg_*` family, then removed via
+	 * {@see delete_transient()} — one call per entry. Going through the transient
+	 * API (rather than a raw `DELETE`) is deliberate: it removes both the value
+	 * and `_transient_timeout_` rows AND invalidates WordPress's in-memory option
+	 * cache, so an `isNegative()` check later in the same request sees the entry
+	 * gone. A raw `DELETE` leaves that cache stale. This only touches the
+	 * short-lived transients — never downloaded media on disk. Returns the number
+	 * of entries cleared.
+	 *
+	 * Note: with a persistent object cache backing transients (no option rows),
+	 * there is nothing to enumerate here — a known limitation for that setup.
 	 */
 	public function clearAll(): int {
 		global $wpdb;
 
-		$like = $wpdb->esc_like( '_transient_' . self::KEY_PREFIX ) . '%';
-		$rows = (int) $wpdb->query(
+		$option_names = $wpdb->get_col(
 			$wpdb->prepare(
-				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-				$like,
-				$wpdb->esc_like( '_transient_timeout_' . self::KEY_PREFIX ) . '%'
+				"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+				$wpdb->esc_like( '_transient_' . self::KEY_PREFIX ) . '%'
 			)
 		);
 
-		// Each cached entry persists as two option rows (value + timeout).
-		return intdiv( $rows, 2 );
+		$cleared = 0;
+
+		foreach ( $option_names as $option_name ) {
+			$transient = substr( (string) $option_name, strlen( '_transient_' ) );
+
+			if ( delete_transient( $transient ) ) {
+				++$cleared;
+			}
+		}
+
+		return $cleared;
 	}
 
 	/**

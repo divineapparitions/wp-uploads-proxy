@@ -44,34 +44,36 @@ if ( is_readable( $uploads_proxy_autoload ) ) {
  * mirroring {@see NegativeCache::clearAll}. Neither path touches the uploads
  * directory.
  */
-function uploads_proxy_purge_site_state(): void {
-	if ( class_exists( Uninstaller::class ) && class_exists( NegativeCache::class ) ) {
-		$negative_cache = new NegativeCache();
+if ( ! function_exists( 'uploads_proxy_purge_site_state' ) ) {
+	function uploads_proxy_purge_site_state(): void {
+		if ( class_exists( Uninstaller::class ) && class_exists( NegativeCache::class ) ) {
+			$negative_cache = new NegativeCache();
 
-		( new Uninstaller(
-			static function ( string $name ): void {
-				delete_option( $name );
-			},
-			static fn (): int => $negative_cache->clearAll(),
-		) )->purge();
+			( new Uninstaller(
+				static function ( string $name ): void {
+					delete_option( $name );
+				},
+				static fn (): int => $negative_cache->clearAll(),
+			) )->purge();
 
-		return;
+			return;
+		}
+
+		// Self-contained fallback when vendor/ is missing: literal option/transient keys.
+		delete_option( 'uploads_proxy_settings' );
+		delete_option( 'uploads_proxy_downloaded_count' );
+		delete_option( 'uploads_proxy_negative_count' );
+
+		global $wpdb;
+
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+				$wpdb->esc_like( '_transient_uploads_proxy_neg_' ) . '%',
+				$wpdb->esc_like( '_transient_timeout_uploads_proxy_neg_' ) . '%'
+			)
+		);
 	}
-
-	// Self-contained fallback when vendor/ is missing: literal option/transient keys.
-	delete_option( 'uploads_proxy_settings' );
-	delete_option( 'uploads_proxy_downloaded_count' );
-	delete_option( 'uploads_proxy_negative_count' );
-
-	global $wpdb;
-
-	$wpdb->query(
-		$wpdb->prepare(
-			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-			$wpdb->esc_like( '_transient_uploads_proxy_neg_' ) . '%',
-			$wpdb->esc_like( '_transient_timeout_uploads_proxy_neg_' ) . '%'
-		)
-	);
 }
 
 if ( is_multisite() ) {

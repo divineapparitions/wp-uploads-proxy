@@ -111,7 +111,7 @@ final class NegativeCacheTest extends TestCase {
 		self::assertSame( $keys[0], $keys[1] );
 	}
 
-	public function test_clear_all_deletes_the_negative_transient_family_and_returns_count(): void {
+	public function test_clear_all_deletes_each_negative_transient_via_the_api_and_returns_count(): void {
 		$fakeWpdb = new class() {
 
 			public string $options    = 'wp_options';
@@ -131,21 +131,39 @@ final class NegativeCacheTest extends TestCase {
 				return $query;
 			}
 
-			public function query( string $query ): int {
-				// Two rows per entry (value + timeout); pretend three entries cleared.
-				return 6;
+			/**
+			 * @return array<int, string>
+			 */
+			public function get_col( string $query ): array {
+				return [
+					'_transient_uploads_proxy_neg_aaa',
+					'_transient_uploads_proxy_neg_bbb',
+					'_transient_uploads_proxy_neg_ccc',
+				];
 			}
 		};
 
 		$GLOBALS['wpdb'] = $fakeWpdb;
 
+		$deleted = [];
+		Functions\when( 'delete_transient' )->alias(
+			static function ( string $transient ) use ( &$deleted ): bool {
+				$deleted[] = $transient;
+				return true;
+			}
+		);
+
 		$cleared = ( new NegativeCache() )->clearAll();
 
-		// Six option rows = three negative-cache entries cleared.
+		// Three transients discovered and deleted through the transient API, so the
+		// option cache is invalidated (a raw DELETE would leave it stale).
 		self::assertSame( 3, $cleared );
-		self::assertNotNull( $fakeWpdb->lastQuery );
-		self::assertStringContainsString( '_transient_', (string) $fakeWpdb->lastLike );
-		self::assertStringContainsString( 'uploads_proxy_neg_', (string) $fakeWpdb->lastLike );
+		self::assertSame(
+			[ 'uploads_proxy_neg_aaa', 'uploads_proxy_neg_bbb', 'uploads_proxy_neg_ccc' ],
+			$deleted
+		);
+		self::assertSame( 'SELECT', strtok( (string) $fakeWpdb->lastQuery, ' ' ) );
+		self::assertStringContainsString( '_transient_uploads_proxy_neg_', (string) $fakeWpdb->lastLike );
 
 		unset( $GLOBALS['wpdb'] );
 	}
