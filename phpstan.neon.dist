@@ -8,3 +8,7 @@ parameters:
 		- uninstall.php
 	# WordPress hook callbacks pass mixed values; allow the deliberate widening.
 	treatPhpDocTypesAsCertain: false
+	# WP-CLI symbols (WP_CLI, WP_CLI\Utils\*) aren't in the bundled WordPress core
+	# stubs; php-stubs/wp-cli-stubs supplies them so src/Cli analyses cleanly.
+	scanFiles:
+		- vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
