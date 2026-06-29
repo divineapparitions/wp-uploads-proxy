@@ -1,10 +1,10 @@
-# Uploads Proxy
+# Divine Apparitions Uploads Proxy
 
 > Proxy missing media to a production origin so staging and local environments don't need a full copy of the uploads directory.
 
 When you pull a production database into a staging or local environment, every
 media URL points at a file you didn't copy — pages render with broken images and
-dead file links. Uploads Proxy intercepts the request for any **missing** uploads
+dead file links. Divine Apparitions Uploads Proxy intercepts the request for any **missing** uploads
 file and resolves it against a configured production **Origin**, so pages render
 with real media without syncing gigabytes of uploads.
 
@@ -33,16 +33,16 @@ A Miss resolves in one of two modes:
 ## Installation (from source)
 
 ```bash
-git clone git@github.com:divineapparitions/wp-uploads-proxy.git uploads-proxy
-cd uploads-proxy
-composer install --no-dev   # production dependencies only
+git clone git@github.com:divineapparitions/wp-uploads-proxy.git divine-apparitions-uploads-proxy
 ```
 
-Place the resulting `uploads-proxy` directory in `wp-content/plugins/` and
-activate it from **Plugins** in the admin.
+Place the resulting `divine-apparitions-uploads-proxy` directory in
+`wp-content/plugins/` and activate it from **Plugins** in the admin.
 
-> `vendor/` is not committed. Running `composer install` generates the autoloader
-> the plugin needs to boot.
+> The plugin ships a self-contained PSR-4 autoloader (`autoload.php`) and has no
+> runtime dependencies, so it boots straight from a clone — there is no
+> `composer install` step. Composer is only needed for the development tooling
+> (PHPUnit, PHPStan, PHP_CodeSniffer).
 
 ## Configuration
 
@@ -137,7 +137,14 @@ Integration tests boot real WordPress via [`@wordpress/env`](https://www.npmjs.c
 npm install
 npm run env:start          # start the wp-env containers
 npm run test:integration   # PHPUnit against real WordPress
+npm run env:stop           # stop the containers when finished
 ```
+
+The suite runs against a real WordPress install in the `tests-cli` container.
+The containers persist between runs, so `env:start` is only needed once per
+session. To reuse a single wp-env Docker stack across several sibling plugins
+(instead of one per project), point `WP_ENV_HOME` at a shared directory before
+the `npm` commands — e.g. `WP_ENV_HOME=../.wp-env npm run test:integration`.
 
 > PHPUnit is pinned to `^9.6`: the WordPress core test suite that wp-env runs
 > still uses a PHPUnit 9 API removed in PHPUnit 10, so integration tests cannot
@@ -146,7 +153,7 @@ npm run test:integration   # PHPUnit against real WordPress
 ### Project layout
 
 ```
-uploads-proxy.php            Plugin header + bootstrap (PHP/WP version guards, autoloader)
+divine-apparitions-uploads-proxy.php            Plugin header + bootstrap (PHP/WP version guards, autoloader)
 uninstall.php                State cleanup on delete (multisite-aware; never deletes media)
 src/
   Plugin.php                 Thin orchestrator; wires components to hooks

@@ -38,7 +38,7 @@ require_once $uploads_proxy_functions;
 tests_add_filter(
 	'muplugins_loaded',
 	static function (): void {
-		require dirname( __DIR__, 2 ) . '/uploads-proxy.php';
+		require dirname( __DIR__, 2 ) . '/divine-apparitions-uploads-proxy.php';
 	}
 );
 

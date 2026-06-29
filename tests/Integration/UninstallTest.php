@@ -36,7 +36,7 @@ final class UninstallTest extends WP_UnitTestCase {
 
 	private function runUninstall(): void {
 		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
-			define( 'WP_UNINSTALL_PLUGIN', 'uploads-proxy/uploads-proxy.php' );
+			define( 'WP_UNINSTALL_PLUGIN', 'divine-apparitions-uploads-proxy/divine-apparitions-uploads-proxy.php' );
 		}
 
 		require $this->uninstallFile();

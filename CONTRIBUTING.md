@@ -1,4 +1,4 @@
-# Contributing to Uploads Proxy
+# Contributing to Divine Apparitions Uploads Proxy
 
 Thanks for taking the time to contribute! This document explains how to submit
 changes and the one legal step we ask of every contributor.
@@ -49,6 +49,10 @@ Pull requests without a sign-off on all commits cannot be merged.
    ```
    Or individually: `composer lint` (phpcs), `composer analyze` (phpstan),
    `composer test` (phpunit). Use `composer lint:fix` to auto-fix style issues.
+
+   Integration tests boot real WordPress and require Docker; they run separately
+   from `composer check` — see the **Development** section of the README
+   (`npm run env:start` then `npm run test:integration`).
 4. Open a pull request describing the change and the motivation.
 
 ## Coding standards

@@ -1,4 +1,4 @@
-# Uploads Proxy
+# Divine Apparitions Uploads Proxy
 
 A WordPress plugin that serves locally-missing media by proxying to a remote
 origin, so a development or staging site can run against a production database
@@ -124,7 +124,7 @@ repeated Misses for a genuinely-absent file stop re-hitting the Origin.
   snake_case variable/method names, hyphenated `class-*.php` filenames) and does
   not reference WordPress-Docs.
 - **Runtime autoloading is self-contained, not Composer's.** The plugin has no
-  runtime Composer dependencies, so `uploads-proxy.php` and `uninstall.php` load
+  runtime Composer dependencies, so `divine-apparitions-uploads-proxy.php` and `uninstall.php` load
   the `DivineApparitions\UploadsProxy\` namespace from `src/` through a hand-rolled
   PSR-4 `spl_autoload_register` (`autoload.php`), not `vendor/autoload.php`. The
   plugin therefore runs from a plain zip with no build step and ships no `vendor/`.

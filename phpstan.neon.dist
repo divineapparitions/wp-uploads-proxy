@@ -4,7 +4,7 @@ parameters:
 	level: 6
 	paths:
 		- src
-		- uploads-proxy.php
+		- divine-apparitions-uploads-proxy.php
 		- uninstall.php
 	# WordPress hook callbacks pass mixed values; allow the deliberate widening.
 	treatPhpDocTypesAsCertain: false

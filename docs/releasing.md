@@ -1,6 +1,6 @@
 # Releasing
 
-Maintainer reference for how Uploads Proxy is built and published. This file is
+Maintainer reference for how Divine Apparitions Uploads Proxy is built and published. This file is
 **not shipped** in the plugin zip — `docs/` is excluded by `.distignore` and by
 `export-ignore` in `.gitattributes`.
 
@@ -17,7 +17,7 @@ for end users, and `composer`/`git archive` produces an installable plugin.
 
 ## What ships vs. what doesn't
 
-- **Ships:** `uploads-proxy.php`, `autoload.php`, `src/`, `uninstall.php`,
+- **Ships:** `divine-apparitions-uploads-proxy.php`, `autoload.php`, `src/`, `uninstall.php`,
   `readme.txt`, `LICENSE`, and any `languages/` translations.
 - **Excluded from the package:** everything listed in `.distignore` (the
   WordPress.org build) and in the `export-ignore` block of `.gitattributes`
@@ -30,8 +30,8 @@ for end users, and `composer`/`git archive` produces an installable plugin.
 
 Three version markers must agree:
 
-1. `Version:` header in `uploads-proxy.php`
-2. `const VERSION` in `uploads-proxy.php`
+1. `Version:` header in `divine-apparitions-uploads-proxy.php`
+2. `const VERSION` in `divine-apparitions-uploads-proxy.php`
 3. `Stable tag:` in `readme.txt` (the WordPress.org format)
 
 Then:
@@ -50,18 +50,20 @@ Apparitions org). Releases are cut from `master`.
 
 ## WordPress.org (when publishing there)
 
-**Plugin slug: `uploads-proxy`** (not `wp-uploads-proxy`). The slug is the
-installed folder name and the `.org` permalink (`wordpress.org/plugins/uploads-proxy/`),
-and WordPress.org requires it to equal the plugin **Text Domain** — which is
-`uploads-proxy` throughout the code. The GitHub repo is named `wp-uploads-proxy`;
-the `.org` slug deliberately differs and that is fine.
+**Plugin slug: `divine-apparitions-uploads-proxy`** (not `wp-uploads-proxy`). The
+slug is the installed folder name and the `.org` permalink
+(`wordpress.org/plugins/divine-apparitions-uploads-proxy/`), and WordPress.org
+requires it to equal the plugin **Text Domain** — which is
+`divine-apparitions-uploads-proxy` throughout the code. The GitHub repo is named
+`wp-uploads-proxy`; the `.org` slug deliberately differs and that is fine.
 
 > Gotcha: `10up/action-wordpress-plugin-deploy` defaults its `slug` to the GitHub
-> repository name (`wp-uploads-proxy`). Set `slug: uploads-proxy` explicitly in the
-> deploy workflow, and install/extract the plugin into a folder named
-> `uploads-proxy/` when validating with Plugin Check — otherwise Plugin Check derives
-> the expected text domain from the folder name and reports a spurious
-> `WordPress.WP.I18n.TextDomainMismatch` for every translatable string.
+> repository name (`wp-uploads-proxy`). Set `slug: divine-apparitions-uploads-proxy`
+> explicitly in the deploy workflow, and install/extract the plugin into a folder
+> named `divine-apparitions-uploads-proxy/` when validating with Plugin Check —
+> otherwise Plugin Check derives the expected text domain from the folder name and
+> reports a spurious `WordPress.WP.I18n.TextDomainMismatch` for every translatable
+> string.
 
 The `.org` plugin directory is SVN-based, separate from Git. Recommended
 automation:

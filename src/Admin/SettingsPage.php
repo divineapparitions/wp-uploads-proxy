@@ -62,8 +62,8 @@ final class SettingsPage implements Registrable {
 
 	public function addMenuPage(): void {
 		add_options_page(
-			__( 'Uploads Proxy', 'uploads-proxy' ),
-			__( 'Uploads Proxy', 'uploads-proxy' ),
+			__( 'Divine Apparitions Uploads Proxy', 'divine-apparitions-uploads-proxy' ),
+			__( 'Uploads Proxy', 'divine-apparitions-uploads-proxy' ),
 			'manage_options',
 			self::MENU_SLUG,
 			[ $this, 'renderPage' ]
@@ -90,7 +90,7 @@ final class SettingsPage implements Registrable {
 	 */
 	public function handleTestOrigin(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You are not allowed to test the Origin connection.', 'uploads-proxy' ) );
+			wp_die( esc_html__( 'You are not allowed to test the Origin connection.', 'divine-apparitions-uploads-proxy' ) );
 		}
 
 		check_admin_referer( self::ACTION_TEST_ORIGIN );
@@ -146,19 +146,19 @@ final class SettingsPage implements Registrable {
 			$class = 'notice-success';
 			$text  = sprintf(
 				/* translators: %d: HTTP status code. */
-				__( 'Origin is reachable (HTTP %d).', 'uploads-proxy' ),
+				__( 'Origin is reachable (HTTP %d).', 'divine-apparitions-uploads-proxy' ),
 				$code
 			);
 		} elseif ( $result->hasResponse() ) {
 			$class = 'notice-error';
 			$text  = sprintf(
 				/* translators: %d: HTTP status code. */
-				__( 'Origin is unreachable (HTTP %d).', 'uploads-proxy' ),
+				__( 'Origin is unreachable (HTTP %d).', 'divine-apparitions-uploads-proxy' ),
 				$code
 			);
 		} else {
 			$class = 'notice-error';
-			$text  = __( 'Origin is unreachable (no response).', 'uploads-proxy' );
+			$text  = __( 'Origin is unreachable (no response).', 'divine-apparitions-uploads-proxy' );
 		}
 
 		printf(
@@ -173,42 +173,42 @@ final class SettingsPage implements Registrable {
 	 * and the counters.
 	 */
 	private function renderStatusPanel( Diagnostics $diagnostics ): void {
-		echo '<h2>' . esc_html__( 'Status', 'uploads-proxy' ) . '</h2>';
+		echo '<h2>' . esc_html__( 'Status', 'divine-apparitions-uploads-proxy' ) . '</h2>';
 		echo '<table class="widefat striped" style="max-width:720px">';
 		echo '<tbody>';
 
 		$this->renderStatusRow(
-			esc_html__( 'Proxy', 'uploads-proxy' ),
+			esc_html__( 'Proxy', 'divine-apparitions-uploads-proxy' ),
 			$diagnostics->isActive()
-				? esc_html__( 'Active', 'uploads-proxy' )
-				: esc_html__( 'Inactive', 'uploads-proxy' )
+				? esc_html__( 'Active', 'divine-apparitions-uploads-proxy' )
+				: esc_html__( 'Inactive', 'divine-apparitions-uploads-proxy' )
 		);
 
 		$origin = '' !== $diagnostics->origin()
 			? esc_html( $diagnostics->origin() )
-			: esc_html__( 'Not configured', 'uploads-proxy' );
+			: esc_html__( 'Not configured', 'divine-apparitions-uploads-proxy' );
 		$this->renderStatusRow(
-			esc_html__( 'Origin', 'uploads-proxy' ),
+			esc_html__( 'Origin', 'divine-apparitions-uploads-proxy' ),
 			$origin . ' ' . $this->sourceBadge( $diagnostics->originSource() )
 		);
 
 		$this->renderStatusRow(
-			esc_html__( 'Mode', 'uploads-proxy' ),
+			esc_html__( 'Mode', 'divine-apparitions-uploads-proxy' ),
 			esc_html( $diagnostics->mode()->label() ) . ' ' . $this->sourceBadge( $diagnostics->modeSource() )
 		);
 
 		$this->renderStatusRow(
-			esc_html__( 'Origin Basic Auth', 'uploads-proxy' ),
+			esc_html__( 'Origin Basic Auth', 'divine-apparitions-uploads-proxy' ),
 			$this->basicAuthSummary( $diagnostics ) . ' ' . $this->sourceBadge( $diagnostics->basicAuthSource() )
 		);
 
 		$this->renderStatusRow(
-			esc_html__( 'Files downloaded', 'uploads-proxy' ),
+			esc_html__( 'Files downloaded', 'divine-apparitions-uploads-proxy' ),
 			esc_html( (string) $diagnostics->downloadedCount() )
 		);
 
 		$this->renderStatusRow(
-			esc_html__( 'Negative-cache entries', 'uploads-proxy' ),
+			esc_html__( 'Negative-cache entries', 'divine-apparitions-uploads-proxy' ),
 			esc_html( (string) $diagnostics->negativeCacheCount() )
 		);
 
@@ -236,12 +236,12 @@ final class SettingsPage implements Registrable {
 	 */
 	private function basicAuthSummary( Diagnostics $diagnostics ): string {
 		if ( ! $diagnostics->hasBasicAuth() ) {
-			return esc_html__( 'Not set', 'uploads-proxy' );
+			return esc_html__( 'Not set', 'divine-apparitions-uploads-proxy' );
 		}
 
 		return sprintf(
 			/* translators: 1: Basic Auth username, 2: a fixed password mask. */
-			esc_html__( '%1$s (password %2$s)', 'uploads-proxy' ),
+			esc_html__( '%1$s (password %2$s)', 'divine-apparitions-uploads-proxy' ),
 			esc_html( $diagnostics->basicAuthUsername() ),
 			esc_html( self::PASSWORD_MASK )
 		);
@@ -272,7 +272,7 @@ final class SettingsPage implements Registrable {
 		);
 		wp_nonce_field( self::ACTION_TEST_ORIGIN );
 		submit_button(
-			__( 'Test Origin connection', 'uploads-proxy' ),
+			__( 'Test Origin connection', 'divine-apparitions-uploads-proxy' ),
 			'secondary',
 			'submit',
 			false
@@ -287,7 +287,7 @@ final class SettingsPage implements Registrable {
 	 * is suppressed entirely when every field is overridden.
 	 */
 	private function renderSettingsForm( Diagnostics $diagnostics ): void {
-		echo '<h2>' . esc_html__( 'Settings', 'uploads-proxy' ) . '</h2>';
+		echo '<h2>' . esc_html__( 'Settings', 'divine-apparitions-uploads-proxy' ) . '</h2>';
 
 		$anyEditable = $diagnostics->isOriginEditable()
 			|| $diagnostics->isModeEditable()
@@ -296,7 +296,7 @@ final class SettingsPage implements Registrable {
 		if ( ! $anyEditable ) {
 			echo '<p class="description">' . esc_html__(
 				'Every setting is supplied by a constant or environment variable, so there is nothing to edit here. The effective values and their sources are shown in the status panel above.',
-				'uploads-proxy'
+				'divine-apparitions-uploads-proxy'
 			) . '</p>';
 			return;
 		}
@@ -337,12 +337,12 @@ final class SettingsPage implements Registrable {
 			return;
 		}
 
-		echo '<tr><th scope="row">' . esc_html__( 'Enable proxying', 'uploads-proxy' ) . '</th><td>';
+		echo '<tr><th scope="row">' . esc_html__( 'Enable proxying', 'divine-apparitions-uploads-proxy' ) . '</th><td>';
 		printf(
 			'<label><input type="checkbox" name="%1$s[enabled]" value="1" %2$s /> %3$s</label>',
 			esc_attr( Settings::OPTION_NAME ),
 			checked( $this->settings->dbEnabled(), true, false ),
-			esc_html__( 'Proxy Uploads that are missing locally to the Origin.', 'uploads-proxy' )
+			esc_html__( 'Proxy Uploads that are missing locally to the Origin.', 'divine-apparitions-uploads-proxy' )
 		);
 		echo '</td></tr>';
 	}
@@ -353,7 +353,7 @@ final class SettingsPage implements Registrable {
 			return;
 		}
 
-		echo '<tr><th scope="row"><label for="uploads_proxy_origin_url">' . esc_html__( 'Origin URL', 'uploads-proxy' ) . '</label></th><td>';
+		echo '<tr><th scope="row"><label for="uploads_proxy_origin_url">' . esc_html__( 'Origin URL', 'divine-apparitions-uploads-proxy' ) . '</label></th><td>';
 		printf(
 			'<input type="url" class="regular-text code" id="uploads_proxy_origin_url" name="%1$s[origin_url]" value="%2$s" placeholder="https://example.com" />',
 			esc_attr( Settings::OPTION_NAME ),
@@ -361,7 +361,7 @@ final class SettingsPage implements Registrable {
 		);
 		echo '<p class="description">' . esc_html__(
 			'Scheme and host of the Origin, e.g. https://example.com (no trailing slash needed).',
-			'uploads-proxy'
+			'divine-apparitions-uploads-proxy'
 		) . '</p>';
 		echo '</td></tr>';
 	}
@@ -374,7 +374,7 @@ final class SettingsPage implements Registrable {
 
 		$current = $this->settings->dbMode();
 
-		echo '<tr><th scope="row"><label for="uploads_proxy_mode">' . esc_html__( 'Mode', 'uploads-proxy' ) . '</label></th><td>';
+		echo '<tr><th scope="row"><label for="uploads_proxy_mode">' . esc_html__( 'Mode', 'divine-apparitions-uploads-proxy' ) . '</label></th><td>';
 		printf(
 			'<select id="uploads_proxy_mode" name="%s[mode]">',
 			esc_attr( Settings::OPTION_NAME )
@@ -390,7 +390,7 @@ final class SettingsPage implements Registrable {
 		echo '</select>';
 		echo '<p class="description">' . esc_html__(
 			'Download saves a missing file locally and serves it; Hotlink redirects the browser to the Origin.',
-			'uploads-proxy'
+			'divine-apparitions-uploads-proxy'
 		) . '</p>';
 		echo '</td></tr>';
 	}
@@ -410,24 +410,24 @@ final class SettingsPage implements Registrable {
 
 		$passwordIsSet = '' !== $this->settings->dbBasicAuthPass();
 
-		echo '<tr><th scope="row"><label for="uploads_proxy_basic_auth_user">' . esc_html__( 'Origin Basic Auth', 'uploads-proxy' ) . '</label></th><td>';
+		echo '<tr><th scope="row"><label for="uploads_proxy_basic_auth_user">' . esc_html__( 'Origin Basic Auth', 'divine-apparitions-uploads-proxy' ) . '</label></th><td>';
 		printf(
 			'<input type="text" class="regular-text" id="uploads_proxy_basic_auth_user" name="%1$s[basic_auth_user]" value="%2$s" autocomplete="off" placeholder="%3$s" />',
 			esc_attr( Settings::OPTION_NAME ),
 			esc_attr( $this->settings->dbBasicAuthUser() ),
-			esc_attr__( 'Username', 'uploads-proxy' )
+			esc_attr__( 'Username', 'divine-apparitions-uploads-proxy' )
 		);
 		printf(
 			' <input type="password" class="regular-text" name="%1$s[basic_auth_pass]" value="" autocomplete="new-password" placeholder="%2$s" />',
 			esc_attr( Settings::OPTION_NAME ),
 			$passwordIsSet
-				? esc_attr__( 'Set — leave blank to keep', 'uploads-proxy' )
-				: esc_attr__( 'No password set', 'uploads-proxy' )
+				? esc_attr__( 'Set — leave blank to keep', 'divine-apparitions-uploads-proxy' )
+				: esc_attr__( 'No password set', 'divine-apparitions-uploads-proxy' )
 		);
 		echo '<p class="description">';
 		echo $passwordIsSet
-			? esc_html__( 'A password is stored. Leave the field blank to keep it, or type a new one to replace it.', 'uploads-proxy' )
-			: esc_html__( 'Optional Basic Auth credentials sent with the outbound Origin request, for a locked Test or Dev Origin.', 'uploads-proxy' );
+			? esc_html__( 'A password is stored. Leave the field blank to keep it, or type a new one to replace it.', 'divine-apparitions-uploads-proxy' )
+			: esc_html__( 'Optional Basic Auth credentials sent with the outbound Origin request, for a locked Test or Dev Origin.', 'divine-apparitions-uploads-proxy' );
 		echo '</p>';
 		echo '</td></tr>';
 	}
