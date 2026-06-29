@@ -30,8 +30,8 @@ enum Mode: string {
 	 */
 	public function label(): string {
 		return match ( $this ) {
-			self::Download => __( 'Download', 'uploads-proxy' ),
-			self::Hotlink  => __( 'Hotlink', 'uploads-proxy' ),
+			self::Download => __( 'Download', 'divine-apparitions-uploads-proxy' ),
+			self::Hotlink  => __( 'Hotlink', 'divine-apparitions-uploads-proxy' ),
 		};
 	}
 }

@@ -33,10 +33,10 @@ A Miss resolves in one of two modes:
 ## Installation (from source)
 
 ```bash
-git clone git@github.com:divineapparitions/wp-uploads-proxy.git uploads-proxy
+git clone git@github.com:divineapparitions/wp-uploads-proxy.git divine-apparitions-uploads-proxy
 ```
 
-Place the resulting `uploads-proxy` directory in
+Place the resulting `divine-apparitions-uploads-proxy` directory in
 `wp-content/plugins/` and activate it from **Plugins** in the admin.
 
 > The plugin ships a self-contained PSR-4 autoloader (`autoload.php`) and has no

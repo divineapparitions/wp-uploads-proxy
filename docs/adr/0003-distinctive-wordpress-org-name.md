@@ -1,22 +1,23 @@
-# The public *display name* is brand-led (Divine Apparitions Uploads Proxy); the slug, text domain, and internal identifiers stay `uploads-proxy` / `uploads_proxy`
+# The public name is brand-led (Divine Apparitions Uploads Proxy); internal identifiers stay `uploads_proxy`
 
-**Status:** accepted (updated 2026-06-29 after WordPress.org re-review — see *Update* below)
+**Status:** accepted
 
-The plugin's public identity is a **brand-led display name, "Divine Apparitions
-Uploads Proxy"**, over a **slug and text domain that stay `uploads-proxy`**. The
-internal identifiers — the `uploads_proxy_*` option keys, the public
+The plugin's public identity is **display name "Divine Apparitions Uploads Proxy"**
+with **slug and text domain `divine-apparitions-uploads-proxy`**. The internal
+identifiers — the `uploads_proxy_*` option keys, the public
 `uploads_proxy_is_allowed_file` / `uploads_proxy_origin_timeout` filters, the
 `X-Uploads-Proxy` response header, the `wp uploads-proxy` WP-CLI command, and the
-`?page=uploads-proxy` admin-page slug — also keep the `uploads_proxy` /
-`uploads-proxy` prefix. Only the human-readable name carries the brand.
+`?page=uploads-proxy` admin-page slug — deliberately keep the original
+`uploads_proxy` / `uploads-proxy` prefix.
 
-## Why the brand-led name
+## Why the rename
 
-The WordPress.org submission was **pended at auto-prereview on 2026-06-29**. The
-blocking issue was the **name**: "Uploads Proxy" is too generic and too close to
-existing names in the "uploads proxy" space, which the directory's naming guideline
-does not allow. The reviewer's recommended remedy is a distinctive identifier *at
-the front* of the name — ideally the author's own brand.
+The WordPress.org submission (v0.10.0) was **pended at auto-prereview on
+2026-06-29**. The blocking issue was the name: `Uploads Proxy` / `uploads-proxy`
+is too generic and too close to existing names in the "uploads proxy" space, which
+the directory's naming guideline does not allow. The reviewer's recommended remedy
+is a distinctive identifier *at the front* of the name — ideally the author's own
+brand.
 
 Leading with **Divine Apparitions** (the company that owns the plugin, and already
 the `DivineApparitions\UploadsProxy` namespace and the `Author` header) is the
@@ -33,55 +34,37 @@ Alternatives considered and rejected:
   Proxy"). Viable and on-brand, but a brand-first name is the lowest-risk choice,
   matches the existing namespace/author, and needs no separate trademark clearance.
 
-## Why the slug and text domain stay `uploads-proxy`
+## Why internal identifiers do not change
 
-The slug is assigned by WordPress.org at first submission and, in practice, is **not
-changed** for an existing submission — the directory kept this plugin's original
-`uploads-proxy` slug. WordPress.org requires the **Text Domain to equal the slug**,
-so the text domain stays `uploads-proxy` to match. The display name is free-form and
-does *not* have to match the slug, so the brand can lead the name while the slug and
-text domain remain the original short identifier.
+The slug and text domain are the plugin's *public* identity, and WordPress.org
+requires the text domain to equal the slug — so those had to move. The option
+keys, filter names, response header, CLI command, and admin-page slug are a
+*different contract*: stored data, an integration API third parties may hook, and
+internal routing. Renaming them would buy nothing for the review (the directory
+does not inspect them), would churn the public filter/header API, and — for the
+option keys — would orphan settings on any existing install. Keeping them also
+keeps the `WordPress.NamingConventions.PrefixAllGlobals` allowlist (`uploads_proxy`
++ `DivineApparitions\UploadsProxy`) intact.
 
-This also keeps the slug / text domain aligned with the internal `uploads_proxy`
-prefix (option keys, filters, header, CLI), and keeps the
-`WordPress.NamingConventions.PrefixAllGlobals` allowlist (`uploads_proxy` +
-`DivineApparitions\UploadsProxy`) and the `WordPress.WP.I18n` `text_domain`
-(`uploads-proxy`) intact.
-
-## The main plugin file
-
-The main file is **`divine-apparitions-uploads-proxy.php`**. WordPress identifies a
-plugin by the file that carries the plugin header, not by a name matching the slug,
-and WordPress.org's own Plugin Check accepts a main file whose name differs from the
-slug folder (it reported zero filename findings for
-`uploads-proxy/divine-apparitions-uploads-proxy.php`). The file name is therefore
-left as-is; the slug folder and the text domain are what must align, and they do.
-
-## Update (2026-06-29, re-review)
-
-An earlier revision of this ADR moved the **slug and text domain** to
-`divine-apparitions-uploads-proxy`, on the assumption that the renamed plugin would
-receive a new matching slug. It would not: the directory kept the original
-`uploads-proxy` slug, and the v0.11.0 upload failed Plugin Check with a
-`WordPress.WP.I18n.TextDomainMismatch` on every translatable string ("expected
-`uploads-proxy`, got `divine-apparitions-uploads-proxy`"). The fix was to revert the
-**Text Domain header, every i18n text-domain argument, the `phpcs.xml.dist`
-`text_domain` property, and the build/CI slug** back to `uploads-proxy`, while
-keeping the brand-led display name. This ADR records the corrected decision.
-
-The earlier revision also renamed the main file to
-`divine-apparitions-uploads-proxy.php`; that file name is retained (see *The main
-plugin file* above) because Plugin Check accepts it and renaming it back buys
-nothing.
+This is a deliberate split between the *marketing identity* (`divine-apparitions-uploads-proxy`)
+and the *code/integration identity* (`uploads_proxy` / `X-Uploads-Proxy`), recorded
+here so a future contributor does not "fix" the apparent inconsistency.
 
 ## Consequences
 
-- The `.org` permalink and SVN path are `uploads-proxy`
-  (`wordpress.org/plugins/uploads-proxy/`). The CI `plugin-check` job builds and
-  validates under that slug (the `git archive --prefix`, `build-dir`, and the
-  `WordPress/plugin-check-action` `slug:` input are all `uploads-proxy`).
+- The `.org` permalink and SVN path become `divine-apparitions-uploads-proxy`
+  (`wordpress.org/plugins/divine-apparitions-uploads-proxy/`). This supersedes the
+  earlier `slug = uploads-proxy` decision documented in `docs/releasing.md` and the
+  CI `plugin-check` job; both were updated to the new slug (the `git archive`
+  `--prefix`, `build-dir`, and the `WordPress/plugin-check-action` `slug:` input).
 - The GitHub repository stays `wp-uploads-proxy`; the `.org` slug deliberately
   differs, which is allowed.
-- The admin menu label, bootstrap / notice prefixes, and internal identifiers stay
-  the short "Uploads Proxy" / `uploads_proxy`; only the settings-page heading, the
-  plugin header `Plugin Name`, and the readme titles carry the full brand-led name.
+- The main plugin file was renamed `uploads-proxy.php` →
+  `divine-apparitions-uploads-proxy.php` (the file should match the slug); its
+  references in `phpstan.neon.dist` and the integration bootstrap were updated.
+- The admin menu label and the bootstrap/notice prefixes stay the short
+  "Uploads Proxy"; only the settings-page heading, plugin header, and readme titles
+  carry the full brand-led name.
+- Before re-upload, a short reply to `plugins@wordpress.org` must request the
+  `divine-apparitions-uploads-proxy` slug reservation (the slug is permanent after
+  approval).

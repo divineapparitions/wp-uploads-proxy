@@ -56,10 +56,10 @@ final class PermalinkNoticeRenderer implements Registrable {
 
 		printf(
 			'<div class="notice notice-warning"><p><strong>%1$s</strong> %2$s</p></div>',
-			esc_html__( 'Uploads Proxy:', 'uploads-proxy' ),
+			esc_html__( 'Uploads Proxy:', 'divine-apparitions-uploads-proxy' ),
 			esc_html__(
 				'the proxy is active, but this site runs on Apache with plain permalinks. A Miss is only intercepted when the web server routes the missing file to index.php, which on Apache requires pretty permalinks. Enable pretty permalinks under Settings → Permalinks for the proxy to work.',
-				'uploads-proxy'
+				'divine-apparitions-uploads-proxy'
 			)
 		);
 	}
