@@ -4,7 +4,7 @@ Tags: media, uploads, proxy, staging, development
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 0.10.0
+Stable tag: 0.11.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,7 +68,8 @@ The whole file is buffered in memory, so the default Origin timeout is a short 1
 
 == Changelog ==
 
-= Unreleased =
+= 0.11.0 =
+* Renamed the plugin to **Divine Apparitions Uploads Proxy** (slug and text domain `divine-apparitions-uploads-proxy`) for the WordPress.org directory; internal option keys, filters, the `X-Uploads-Proxy` header, and the `wp uploads-proxy` CLI command are unchanged.
 * Added an `uploads_proxy_is_allowed_file` filter so types WordPress omits on the front end (notably SVG) can be proxied in Download mode; executables can never be re-enabled through it.
 * Added an `uploads_proxy_origin_timeout` filter to adjust the outbound Origin timeout (default 15s) for large media on a slow link.
 * Fixed: a Download-mode Miss is served with HTTP 200 (was 404 on the first request).

@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.11.0] - 2026-06-29
 
 ### Added
 
@@ -30,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Renamed the plugin to **Divine Apparitions Uploads Proxy** for the WordPress.org
+  directory: the display name is brand-led and the slug / text domain are now
+  `divine-apparitions-uploads-proxy` (ADR-0003). The internal `uploads_proxy_*`
+  option keys, the public filters, the `X-Uploads-Proxy` response header, and the
+  `wp uploads-proxy` CLI command deliberately keep their existing identifiers, so
+  no stored data or integration contract changes.
 - The plugin no longer requires Composer or a bundled `vendor/` to run. Its own
   classes load through a self-contained PSR-4 autoloader (`autoload.php`) instead
   of Composer's generated `vendor/autoload.php`, so Uploads Proxy works from a
@@ -308,7 +314,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Development tooling: PHP_CodeSniffer (WPCS), PHPStan, PHPUnit (Brain Monkey),
   and a GitHub Actions CI workflow across PHP 8.2–8.4.
 
-[Unreleased]: https://github.com/divineapparitions/wp-uploads-proxy/compare/v0.10.0...HEAD
+[0.11.0]: https://github.com/divineapparitions/wp-uploads-proxy/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/divineapparitions/wp-uploads-proxy/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/divineapparitions/wp-uploads-proxy/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/divineapparitions/wp-uploads-proxy/compare/v0.7.0...v0.8.0
