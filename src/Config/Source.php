@@ -22,10 +22,10 @@ enum Source: string {
 	 */
 	public function label(): string {
 		return match ( $this ) {
-			self::Constant   => __( 'Constant', 'divine-apparitions-uploads-proxy' ),
-			self::Env        => __( 'Environment variable', 'divine-apparitions-uploads-proxy' ),
-			self::Db         => __( 'Database option', 'divine-apparitions-uploads-proxy' ),
-			self::DefaultOff => __( 'Default', 'divine-apparitions-uploads-proxy' ),
+			self::Constant   => __( 'Constant', 'uploads-proxy' ),
+			self::Env        => __( 'Environment variable', 'uploads-proxy' ),
+			self::Db         => __( 'Database option', 'uploads-proxy' ),
+			self::DefaultOff => __( 'Default', 'uploads-proxy' ),
 		};
 	}
 }

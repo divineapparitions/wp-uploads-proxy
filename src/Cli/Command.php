@@ -101,7 +101,7 @@ final class Command {
 					'Cleared %d Negative-cache entry and reset the counters. Downloaded media was not touched.',
 					'Cleared %d Negative-cache entries and reset the counters. Downloaded media was not touched.',
 					$result['cleared'],
-					'divine-apparitions-uploads-proxy'
+					'uploads-proxy'
 				),
 				$result['cleared']
 			)

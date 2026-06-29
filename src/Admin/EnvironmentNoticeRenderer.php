@@ -56,10 +56,10 @@ final class EnvironmentNoticeRenderer implements Registrable {
 
 		printf(
 			'<div class="notice notice-warning"><p><strong>%1$s</strong> %2$s</p></div>',
-			esc_html__( 'Uploads Proxy:', 'divine-apparitions-uploads-proxy' ),
+			esc_html__( 'Uploads Proxy:', 'uploads-proxy' ),
 			esc_html__(
 				'the proxy is enabled, but this site reports the "production" environment type, where the proxy stays inert so it never acts on the live Origin. Set WP_ENVIRONMENT_TYPE to "local", "development", or "staging" (for example in wp-config.php) for the proxy to work.',
-				'divine-apparitions-uploads-proxy'
+				'uploads-proxy'
 			)
 		);
 	}

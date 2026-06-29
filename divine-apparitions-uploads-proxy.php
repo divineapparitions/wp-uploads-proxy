@@ -16,7 +16,7 @@
  * Requires PHP:      8.2
  * Author:            Divine Apparitions
  * Author URI:        https://github.com/divineapparitions
- * Text Domain:       divine-apparitions-uploads-proxy
+ * Text Domain:       uploads-proxy
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  */
@@ -50,7 +50,7 @@ function bootstrap_failure( string $message ): void {
 		static function () use ( $message ): void {
 			printf(
 				'<div class="notice notice-error"><p><strong>%1$s</strong> %2$s</p></div>',
-				esc_html__( 'Uploads Proxy:', 'divine-apparitions-uploads-proxy' ),
+				esc_html__( 'Uploads Proxy:', 'uploads-proxy' ),
 				esc_html( $message )
 			);
 		}
@@ -62,7 +62,7 @@ if ( version_compare( PHP_VERSION, MINIMUM_PHP_VERSION, '<' ) ) {
 	bootstrap_failure(
 		sprintf(
 			/* translators: 1: required PHP version, 2: current PHP version. */
-			__( 'requires PHP %1$s or newer. You are running PHP %2$s.', 'divine-apparitions-uploads-proxy' ),
+			__( 'requires PHP %1$s or newer. You are running PHP %2$s.', 'uploads-proxy' ),
 			MINIMUM_PHP_VERSION,
 			PHP_VERSION
 		)
@@ -77,7 +77,7 @@ if ( version_compare( get_bloginfo( 'version' ), MINIMUM_WP_VERSION, '<' ) ) {
 	bootstrap_failure(
 		sprintf(
 			/* translators: 1: required WordPress version, 2: current WordPress version. */
-			__( 'requires WordPress %1$s or newer. You are running WordPress %2$s.', 'divine-apparitions-uploads-proxy' ),
+			__( 'requires WordPress %1$s or newer. You are running WordPress %2$s.', 'uploads-proxy' ),
 			MINIMUM_WP_VERSION,
 			get_bloginfo( 'version' )
 		)

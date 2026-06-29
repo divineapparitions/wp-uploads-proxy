@@ -36,7 +36,7 @@ Features:
 
 == Installation ==
 
-1. Install the plugin from the **Plugins → Add New** screen, or upload the `divine-apparitions-uploads-proxy` directory to `/wp-content/plugins/`.
+1. Install the plugin from the **Plugins → Add New** screen, or upload the `uploads-proxy` directory to `/wp-content/plugins/`.
 2. Activate the plugin through the **Plugins** menu in WordPress.
 3. Configure the Origin and mode via a `wp-config` constant or environment variable (recommended — these survive a production database pull and work hands-free in CI), or as a fallback from **Settings → Uploads Proxy**.
 
@@ -69,7 +69,7 @@ The whole file is buffered in memory, so the default Origin timeout is a short 1
 == Changelog ==
 
 = 0.11.0 =
-* Renamed the plugin to **Divine Apparitions Uploads Proxy** (slug and text domain `divine-apparitions-uploads-proxy`) for the WordPress.org directory; internal option keys, filters, the `X-Uploads-Proxy` header, and the `wp uploads-proxy` CLI command are unchanged.
+* Renamed the plugin's public display name to **Divine Apparitions Uploads Proxy** for the WordPress.org directory; the slug and text domain remain `uploads-proxy`, and the internal option keys, filters, the `X-Uploads-Proxy` header, and the `wp uploads-proxy` CLI command are unchanged.
 * Added an `uploads_proxy_is_allowed_file` filter so types WordPress omits on the front end (notably SVG) can be proxied in Download mode; executables can never be re-enabled through it.
 * Added an `uploads_proxy_origin_timeout` filter to adjust the outbound Origin timeout (default 15s) for large media on a slow link.
 * Fixed: a Download-mode Miss is served with HTTP 200 (was 404 on the first request).

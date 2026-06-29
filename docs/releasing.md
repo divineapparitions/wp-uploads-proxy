@@ -50,20 +50,25 @@ Apparitions org). Releases are cut from `master`.
 
 ## WordPress.org (when publishing there)
 
-**Plugin slug: `divine-apparitions-uploads-proxy`** (not `wp-uploads-proxy`). The
-slug is the installed folder name and the `.org` permalink
-(`wordpress.org/plugins/divine-apparitions-uploads-proxy/`), and WordPress.org
-requires it to equal the plugin **Text Domain** — which is
-`divine-apparitions-uploads-proxy` throughout the code. The GitHub repo is named
-`wp-uploads-proxy`; the `.org` slug deliberately differs and that is fine.
+**Plugin slug: `uploads-proxy`** (not `wp-uploads-proxy`, and not the brand-led
+display name). The slug is the installed folder name and the `.org` permalink
+(`wordpress.org/plugins/uploads-proxy/`), and WordPress.org requires it to equal
+the plugin **Text Domain** — which is `uploads-proxy` throughout the code. The
+public **display name** is the distinctive "Divine Apparitions Uploads Proxy"
+(what satisfies the directory's name guideline); the slug and text domain stay the
+original `uploads-proxy`. The GitHub repo is named `wp-uploads-proxy`; the `.org`
+slug deliberately differs from both, which is fine. (See ADR-0003.)
 
-> Gotcha: `10up/action-wordpress-plugin-deploy` defaults its `slug` to the GitHub
-> repository name (`wp-uploads-proxy`). Set `slug: divine-apparitions-uploads-proxy`
-> explicitly in the deploy workflow, and install/extract the plugin into a folder
-> named `divine-apparitions-uploads-proxy/` when validating with Plugin Check —
-> otherwise Plugin Check derives the expected text domain from the folder name and
-> reports a spurious `WordPress.WP.I18n.TextDomainMismatch` for every translatable
-> string.
+> Gotcha — validate Plugin Check against the **real `.org` slug**. WordPress.org
+> installs the plugin into a folder named after the slug it assigned
+> (`uploads-proxy`) and derives the expected text domain from that folder, so the
+> Text Domain **must** be `uploads-proxy`. `10up/action-wordpress-plugin-deploy`
+> and `WordPress/plugin-check-action` both default `slug` to the GitHub repo name
+> (`wp-uploads-proxy`); set `slug: uploads-proxy` explicitly and extract into a
+> `uploads-proxy/` folder when checking locally — otherwise every translatable
+> string reports `WordPress.WP.I18n.TextDomainMismatch`. (This is exactly the
+> mismatch that pended the v0.11.0 upload: the code shipped a
+> `divine-apparitions-uploads-proxy` text domain against the `uploads-proxy` slug.)
 
 The `.org` plugin directory is SVN-based, separate from Git. Recommended
 automation:
