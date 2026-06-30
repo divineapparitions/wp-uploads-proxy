@@ -23,6 +23,9 @@
 /.editorconfig
 /.wp-env.json
 
+# Build tooling (the package-build script itself never ships — see docs/releasing.md)
+/bin
+
 # Tests
 /tests
 /phpunit.xml.dist
@@ -43,3 +46,8 @@
 /CLA.md
 /CHANGELOG.md
 /README.md
+
+# WordPress Plugin Check report exports (local, regenerable; also in .gitignore so
+# they are never committed — this also guards the rsync-based WordPress.org deploy,
+# which filters the working tree by .distignore rather than by git).
+/*-php-*.json

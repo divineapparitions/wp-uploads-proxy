@@ -7,6 +7,7 @@
 # working, installable plugin. The WordPress.org build instead uses `.distignore`
 # — keep the two lists roughly in sync.
 /.github          export-ignore
+/bin              export-ignore
 /tests            export-ignore
 /.editorconfig    export-ignore
 /.gitattributes   export-ignore

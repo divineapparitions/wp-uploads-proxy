@@ -64,9 +64,12 @@ printf '%s\n' "$LISTING" | grep -qx "${SLUG}/${MAIN_FILE}" \
 unzip -p "$ZIP" "${SLUG}/${MAIN_FILE}" | grep -q '^[[:space:]]*\*\?[[:space:]]*Plugin Name:' \
   || fail "${MAIN_FILE} has no 'Plugin Name:' header."
 
-# No macOS cruft or dev files leaked in.
-if printf '%s\n' "$LISTING" | grep -Eq '(^|/)(__MACOSX|\.DS_Store)(/|$)|(^|/)(vendor|node_modules|tests)/'; then
-  fail "package contains macOS cruft or dev files:"$'\n'"$(printf '%s\n' "$LISTING" | grep -E '(^|/)(__MACOSX|\.DS_Store)(/|$)|(^|/)(vendor|node_modules|tests)/')"
+# No macOS cruft or dev files leaked in. The `bin/` build tooling is caught here
+# too: shell scripts trip WordPress.org's "application files are not permitted"
+# check, so a leaked bin/ would fail intake even though it is harmless at runtime.
+CRUFT_RE='(^|/)(__MACOSX|\.DS_Store)(/|$)|(^|/)(vendor|node_modules|tests|bin)/'
+if printf '%s\n' "$LISTING" | grep -Eq "$CRUFT_RE"; then
+  fail "package contains macOS cruft or dev files:"$'\n'"$(printf '%s\n' "$LISTING" | grep -E "$CRUFT_RE")"
 fi
 
 echo "OK  $ZIP"
