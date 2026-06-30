@@ -26,6 +26,33 @@ for end users, and `composer`/`git archive` produces an installable plugin.
 - Keep `.distignore` and the `.gitattributes` `export-ignore` list roughly in
   sync — they are two mechanisms expressing the same "dev-only, do not ship" set.
 
+## Building the upload package
+
+> **Always upload the zip produced by `bin/build-zip.sh`.** Do **not** right-click
+> the plugin folder and "Compress" in Finder/Explorer (that injects `__MACOSX/` and
+> `.DS_Store` entries that break WordPress.org's readme/header detection — symptom:
+> the review reports "We cannot find the readme.txt" and "We cannot find the file
+> containing plugin headers" even though both exist), and do **not** upload GitHub's
+> "Download ZIP" / source archive (wrong top-folder name, includes dev files).
+
+```sh
+composer build          # or: bash bin/build-zip.sh [git-ref]
+```
+
+This runs `git archive` from `HEAD` (honouring `.gitattributes` `export-ignore`),
+stages the tree under a single top folder named for the slug, zips it to
+`dist/divine-apparitions-uploads-proxy-<version>.zip`, and **verifies** the result:
+a single top folder, `readme.txt` + the header file at its root, a real
+`Plugin Name:` header, and no macOS cruft or dev files. The script exits non-zero
+if any check fails — if it prints `OK`, that exact zip is safe to upload.
+
+Optional: confirm against the same checks WordPress.org runs by extracting the zip
+into a folder named for the **current** `.org` slug and running Plugin Check, e.g.
+`wp plugin check uploads-proxy`. While `.org` still has the slug as `uploads-proxy`,
+the only expected finding is `WordPress.WP.I18n.TextDomainMismatch` (the directory
+team flips the slug to `divine-apparitions-uploads-proxy` on their side; see
+ADR-0003). There must be **no** readme or plugin-header "cannot find" errors.
+
 ## Version bump checklist (every release)
 
 Three version markers must agree:

@@ -63,13 +63,15 @@
 			"@lint",
 			"@analyze",
 			"@test"
-		]
+		],
+		"build": "bash bin/build-zip.sh"
 	},
 	"scripts-descriptions": {
 		"lint": "Check coding standards with PHP_CodeSniffer.",
 		"lint:fix": "Auto-fix coding-standard violations where possible.",
 		"analyze": "Run PHPStan static analysis.",
 		"test": "Run the PHPUnit test suite.",
-		"check": "Run lint, static analysis, and tests."
+		"check": "Run lint, static analysis, and tests.",
+		"build": "Build and verify the WordPress.org upload zip (dist/). Always upload this artifact."
 	}
 }

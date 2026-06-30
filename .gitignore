@@ -20,6 +20,9 @@
 /dist/
 *.zip
 
+# WordPress Plugin Check report exports (local, regenerable)
+/*-php-*.json
+
 # Local overrides of the shared config templates
 phpcs.xml
 phpstan.neon
