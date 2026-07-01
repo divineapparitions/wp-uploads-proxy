@@ -1,0 +1,32 @@
+name: Update WordPress.org assets
+
+# Pushes the plugin's .org page assets (banner, icon, screenshots) from
+# .wordpress-org/ to the WordPress.org SVN `assets/` directory whenever they
+# change on master. Independent of releases, so store art can be updated without
+# cutting a new plugin version.
+#
+# Requires the SVN_USERNAME and SVN_PASSWORD repository secrets (same as deploy.yml).
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - '.wordpress-org/**'
+
+permissions:
+  contents: read
+
+jobs:
+  assets:
+    name: Update .org assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update WordPress.org assets
+        uses: 10up/action-wordpress-plugin-asset-update@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: divine-apparitions-uploads-proxy

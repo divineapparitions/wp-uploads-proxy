@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `readme.txt` + header file at its root, a real `Plugin Name:` header, no macOS
   cruft or dev files), to prevent uploading a malformed package. Documented in
   `docs/releasing.md`.
+- Add WordPress.org publishing CI: `.github/workflows/deploy.yml` deploys `trunk`
+  + `tags/<version>` on a published GitHub Release, and
+  `.github/workflows/assets.yml` updates the `.org` page assets from
+  `.wordpress-org/` on push — both via the `10up/action-wordpress-plugin-*`
+  actions, with the slug pinned to `divine-apparitions-uploads-proxy`. Requires
+  the `SVN_USERNAME` / `SVN_PASSWORD` repository secrets.
 
 ## [0.11.1] - 2026-06-29
 

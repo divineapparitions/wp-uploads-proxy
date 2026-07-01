@@ -1,0 +1,47 @@
+name: Deploy to WordPress.org
+
+# Publishes a release to the WordPress.org SVN repo (trunk + tags/<version>)
+# when a GitHub Release is published. Files are filtered by .distignore, so the
+# deployed tree matches what bin/build-zip.sh produces.
+#
+# IMPORTANT: the .org slug is `divine-apparitions-uploads-proxy`, NOT the GitHub
+# repo name (`wp-uploads-proxy`). The action defaults SLUG to the repo name, so
+# it MUST be overridden below or it would push to the wrong place.
+#
+# One-time setup — add two repo secrets under
+# Settings -> Secrets and variables -> Actions -> New repository secret:
+#   SVN_USERNAME = philltran
+#   SVN_PASSWORD = your WordPress.org SVN password (profiles.wordpress.org -> Account & Security)
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy ${{ github.ref_name }} to WordPress.org
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # docs/releasing.md tags releases as `vX.Y.Z`, but the SVN tag and the
+      # readme.txt `Stable tag` are the bare version (e.g. 0.11.1). Strip a
+      # leading "v" so the SVN tag matches Stable tag whichever form you tag in.
+      - name: Derive version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to WordPress.org SVN
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        # For a dry run (validate without committing to SVN), uncomment:
+        # with:
+        #   dry-run: true
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: divine-apparitions-uploads-proxy
+          VERSION: ${{ steps.version.outputs.version }}

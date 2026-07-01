@@ -95,16 +95,23 @@ requires it to equal the plugin **Text Domain** — which is
 The `.org` plugin directory is SVN-based, separate from Git. Recommended
 automation:
 
-- Submit the plugin once for review to obtain the SVN repository.
-- On a pushed git tag, a GitHub Action (e.g.
-  `10up/action-wordpress-plugin-deploy`) builds the package per `.distignore` and
-  pushes it to SVN `trunk` and `tags/X.Y.Z`. Store the SVN credentials as repo
-  secrets.
-- `.org` page assets (banner, icon, screenshots) live in the SVN `assets/`
-  directory (outside `trunk`), updated via
-  `10up/action-wordpress-plugin-asset-update`.
+- Submit the plugin once for review to obtain the SVN repository. (Done — approved
+  2026-07-01; the first release, 0.11.1, was uploaded to SVN manually.)
+- `.github/workflows/deploy.yml`: when a **GitHub Release is published**,
+  `10up/action-wordpress-plugin-deploy` builds the package per `.distignore` and
+  pushes it to SVN `trunk` and `tags/X.Y.Z`. The `.org` slug is pinned to
+  `divine-apparitions-uploads-proxy` (the action otherwise defaults to the GitHub
+  repo name), and a leading `v` on the tag is stripped so the SVN tag matches
+  `readme.txt` `Stable tag`.
+- `.github/workflows/assets.yml`: on push to `master` touching `.wordpress-org/`,
+  `10up/action-wordpress-plugin-asset-update` pushes the `.org` page assets
+  (banner, icon, screenshots) to the SVN `assets/` directory (outside `trunk`).
+  Put the images in `.wordpress-org/` — see its `README.md` for names and sizes.
+- Both workflows require the `SVN_USERNAME` and `SVN_PASSWORD` repository secrets
+  (Settings → Secrets and variables → Actions).
 - Because there are no runtime dependencies, the build needs no `composer install`
   for the shipped package — `autoload.php` + `src/` are all that run.
 
-> Status: the deploy workflow is **not yet committed** — `.github/workflows/` has
-> CI only. Add a tag-triggered deploy workflow before the first `.org` release.
+> To cut a release: bump the version markers (checklist above), commit, then
+> publish a GitHub Release tagged `X.Y.Z` (or `vX.Y.Z`) — `deploy.yml` does the SVN
+> push. If unsure, validate first with the workflow's `dry-run` option.
