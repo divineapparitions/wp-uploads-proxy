@@ -8,6 +8,7 @@
 # — keep the two lists roughly in sync.
 /.github          export-ignore
 /bin              export-ignore
+/.wordpress-org   export-ignore
 /tests            export-ignore
 /.editorconfig    export-ignore
 /.gitattributes   export-ignore

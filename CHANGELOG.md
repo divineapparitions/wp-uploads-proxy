@@ -18,8 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   + `tags/<version>` on a published GitHub Release, and
   `.github/workflows/assets.yml` updates the `.org` page assets from
   `.wordpress-org/` on push — both via the `10up/action-wordpress-plugin-*`
-  actions, with the slug pinned to `divine-apparitions-uploads-proxy`. Requires
-  the `SVN_USERNAME` / `SVN_PASSWORD` repository secrets.
+  actions (pinned by commit SHA), with the slug set to
+  `divine-apparitions-uploads-proxy`. `.wordpress-org/` is excluded from
+  `.distignore` and `.gitattributes` so the page assets are never shipped in the
+  plugin package or copied into SVN `trunk`. Requires the `SVN_USERNAME` /
+  `SVN_PASSWORD` repository secrets.
 
 ## [0.11.1] - 2026-06-29
 

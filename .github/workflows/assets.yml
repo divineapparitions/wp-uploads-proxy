@@ -3,7 +3,7 @@ name: Update WordPress.org assets
 # Pushes the plugin's .org page assets (banner, icon, screenshots) from
 # .wordpress-org/ to the WordPress.org SVN `assets/` directory whenever they
 # change on master. Independent of releases, so store art can be updated without
-# cutting a new plugin version.
+# cutting a new plugin version. Also runnable on demand (workflow_dispatch).
 #
 # Requires the SVN_USERNAME and SVN_PASSWORD repository secrets (same as deploy.yml).
 
@@ -12,6 +12,7 @@ on:
     branches: [master]
     paths:
       - '.wordpress-org/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -24,8 +25,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Third-party action pinned to a commit SHA (supply-chain hardening); the
+      # trailing comment records the human-readable release it corresponds to.
       - name: Update WordPress.org assets
-        uses: 10up/action-wordpress-plugin-asset-update@stable
+        uses: 10up/action-wordpress-plugin-asset-update@2480306f6f693672726d08b5917ea114cb2825f7 # v2.2.0
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}

@@ -26,6 +26,11 @@
 # Build tooling (the package-build script itself never ships — see docs/releasing.md)
 /bin
 
+# WordPress.org page assets (banner/icon/screenshots). Deployed to the SVN
+# assets/ dir by the asset-update workflow; must NOT ship inside the plugin, and
+# excluding it here also stops the deploy/asset actions copying it into trunk.
+/.wordpress-org
+
 # Tests
 /tests
 /phpunit.xml.dist
