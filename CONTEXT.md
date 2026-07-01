@@ -132,9 +132,11 @@ repeated Misses for a genuinely-absent file stop re-hitting the Origin.
   test bootstraps still load `src/` via Composer's dev autoloader.
 - **Distribution is a plain zip with no build step.** The shipped package is
   `src/` + `autoload.php` + the main/uninstall files + `readme.txt`/`LICENSE`;
-  `vendor/`, `tests/`, `docs/`, and dev config never ship (excluded by
-  `.distignore` and `.gitattributes` `export-ignore`). The full build and
-  WordPress.org publish process lives in `docs/releasing.md`.
+  `vendor/`, `tests/`, `docs/`, `.wordpress-org/` (`.org` page assets), and dev
+  config never ship (excluded by `.distignore` and `.gitattributes`
+  `export-ignore`). Published on WordPress.org as `divine-apparitions-uploads-proxy`
+  (2026-07-01); the full build, SVN deploy, and asset workflow live in
+  `docs/releasing.md`.
 
 ## Flagged ambiguities
 
